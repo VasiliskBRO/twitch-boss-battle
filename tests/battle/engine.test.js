@@ -50,7 +50,7 @@ test('Лобби: HP босса считается по числу бойцов'
     clock.advance(75_000);
     const msgs = eng.tick();
     const boss = eng.getState().boss;
-    const base = (CONFIG.BOSS_BASE_STATS.baseHp + CONFIG.BOSS_BASE_STATS.perPlayerHp * n) * CONFIG.ARCHETYPES[boss.archetype].hpMult;
+    const base = (CONFIG.BOSS_BASE_STATS.baseHp + CONFIG.BOSS_BASE_STATS.perPlayerHp * n ** CONFIG.BOSS_BASE_STATS.playerExponent) * CONFIG.ARCHETYPES[boss.archetype].hpMult;
     assert.ok(boss.maxHp >= Math.round(base * 0.9) && boss.maxHp <= Math.round(base * 1.1), `${n}: ${boss.maxHp}`);
     assert.ok(msgs.some((m) => m.text.includes(`❤️ [██████████] ${boss.maxHp}/${boss.maxHp}`)));
     assert.ok(msgs.some((m) => m.text.startsWith('⚔️ Ход 1/15')));

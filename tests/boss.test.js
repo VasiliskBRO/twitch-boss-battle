@@ -162,7 +162,7 @@ test('finalizeHp: Scaling', () => {
   const playerCount = 10;
   finalizeHp(boss, playerCount, mockRng);
 
-  const expectedBase = (CONFIG.BOSS_BASE_STATS.baseHp + CONFIG.BOSS_BASE_STATS.perPlayerHp * playerCount) * CONFIG.ARCHETYPES[boss.archetype].hpMult;
+  const expectedBase = (CONFIG.BOSS_BASE_STATS.baseHp + CONFIG.BOSS_BASE_STATS.perPlayerHp * playerCount ** CONFIG.BOSS_BASE_STATS.playerExponent) * CONFIG.ARCHETYPES[boss.archetype].hpMult;
   const min = Math.round(expectedBase * 0.9);
   const max = Math.round(expectedBase * 1.1);
 
@@ -272,4 +272,14 @@ test('getBossDamageMult: архетип × фаза × статусы; dmgMult �
   assert.ok(Math.abs(getBossDamageMult(boss) - 1.2 * CONFIG.BOSS_PHASE_DAMAGE_MULT[2] * 1.5) < 1e-9);
   tickStatuses(boss);
   assert.ok(Math.abs(getBossDamageMult(boss) - 1.2 * CONFIG.BOSS_PHASE_DAMAGE_MULT[2]) < 1e-9);
+});
+
+test('Статусы с одним id не перемножаются (действует самый сильный), разные — перемножаются', () => {
+  const boss = generateBoss(mockRng);
+  addStatus(boss, { id: 'vulnerable', turnsLeft: 2, damageTakenMult: 1.2 });
+  addStatus(boss, { id: 'vulnerable', turnsLeft: 2, damageTakenMult: 1.3 });
+  assert.strictEqual(boss.damageTakenMult, 1.3);
+  addStatus(boss, { id: 'armor', turnsLeft: 2, damageTakenMult: 0.7 });
+  addStatus(boss, { id: 'armor', turnsLeft: 2, damageTakenMult: 0.7 });
+  assert.ok(Math.abs(boss.damageTakenMult - 1.3 * 0.7) < 1e-9, `${boss.damageTakenMult}`);
 });

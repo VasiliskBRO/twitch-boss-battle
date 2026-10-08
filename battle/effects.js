@@ -40,7 +40,7 @@ function creditHitSupport(ctx, dealt) {
   const boostSources = [];
   for (const e of state.teamEffects) {
     if (e.type === 'teamDamageBoost' && e.sourceId != null) {
-      boost *= 1 + e.pct;
+      boost = Math.max(boost, 1 + e.pct);
       boostSources.push(e.sourceId);
     }
   }
@@ -50,7 +50,7 @@ function creditHitSupport(ctx, dealt) {
   const vulnSources = [];
   for (const s of state.boss.statusEffects) {
     if (s.id === 'vulnerable' && s.sourceId != null) {
-      vuln *= s.damageTakenMult;
+      vuln = Math.max(vuln, s.damageTakenMult);
       vulnSources.push(s.sourceId);
     }
   }
@@ -79,14 +79,17 @@ export function damageBoss(ctx, sourceId, amount, damageType, opts = {}) {
   return dealt;
 }
 
-// Командный множитель урона: Π(1 + boost) × Π(1 − penalty).
+// Командный множитель урона: (1 + сильнейший буст игроков) × Π(1 + буст карт) × Π(1 − penalty).
+// Бусты игроков (Благословение) не складываются друг с другом — иначе большой отряд разгонял урон в разы.
 export function teamDamageMult(state) {
   let mult = 1;
+  let playerBoost = 0;
   for (const e of state.teamEffects) {
-    if (e.type === 'teamDamageBoost') mult *= 1 + e.pct;
+    if (e.type === 'teamDamageBoost' && e.sourceId != null) playerBoost = Math.max(playerBoost, e.pct);
+    else if (e.type === 'teamDamageBoost') mult *= 1 + e.pct;
     if (e.type === 'teamDamagePenalty') mult *= 1 - e.pct;
   }
-  return mult;
+  return mult * (1 + playerBoost);
 }
 
 export function isSilenced(state, classId) {

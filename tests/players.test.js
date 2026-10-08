@@ -61,7 +61,8 @@ test('Разброс урона в пределах ±15%, доля критов
   const N = 10000;
   for (let i = 0; i < N; i++) {
     const a = rollAction(p, 'атака', rng);
-    const base = a.crit ? 50 * CONFIG.COMBAT.CRIT_MULT : 50;
+    const power = CONFIG.PLAYER_CLASSES.mage.skills.attack.power;
+    const base = a.crit ? power * CONFIG.COMBAT.CRIT_MULT : power;
     assert.ok(a.amount >= Math.round(base * 0.85) && a.amount <= Math.round(base * 1.15), `amount ${a.amount}`);
     if (a.crit) crits++;
   }
@@ -79,11 +80,11 @@ test('Меткий выстрел: всегда крит ×2, итого 90 ±15
   }
 });
 
-test('Маг: Шар ×2.5 (125), Воин: Провокация', () => {
+test('Маг: Шар (100), Воин: Провокация', () => {
   const rng = makeRng(4);
   const mage = plain('mage');
   const a = rollAction(mage, 'навык', rng);
-  const base = a.crit ? 125 * 1.5 : 125;
+  const base = a.crit ? 100 * 1.5 : 100;
   assert.ok(a.amount >= Math.round(base * 0.85) && a.amount <= Math.round(base * 1.15));
   assert.strictEqual(a.manaCost, 40);
 
@@ -145,7 +146,7 @@ test('Хиллер: перелечивание не считается, при �
   assert.strictEqual(seen.size, 3);
 });
 
-test('!навык без маны заменяется на !атака; автодействие 50% силы', () => {
+test('!навык без маны заменяется на !атака; автодействие 75% силы', () => {
   const rng = makeRng(11);
   const mage = plain('mage');
   mage.mana = 39;
@@ -159,10 +160,10 @@ test('!навык без маны заменяется на !атака; авт�
     sum += rollAction(mage, 'атака', rng).amount;
     autoSum += rollAction(mage, 'навык', rng, { auto: true }).amount;
   }
-  assert.ok(Math.abs(autoSum / sum - 0.5) < 0.02, `ratio ${autoSum / sum}`);
+  assert.ok(Math.abs(autoSum / sum - CONFIG.COMBAT.AUTO_ACTION_POWER) < 0.02, `ratio ${autoSum / sum}`);
 
   const healer = plain('healer');
-  assert.strictEqual(rollAction(healer, 'атака', rng, { auto: true }).amount, 0.35 * 0.5);
+  assert.strictEqual(rollAction(healer, 'атака', rng, { auto: true }).amount, 0.35 * CONFIG.COMBAT.AUTO_ACTION_POWER);
 });
 
 test('Смерть: упал на ходу t, встал на t+2 с 30% HP; downed не лечится', () => {

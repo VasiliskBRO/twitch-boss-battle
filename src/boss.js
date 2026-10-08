@@ -72,11 +72,11 @@ export function generateBoss(rng, config = CONFIG) {
 }
 
 export function finalizeHp(boss, playerCount, rng, config = CONFIG) {
-  const { baseHp, perPlayerHp } = config.BOSS_BASE_STATS;
+  const { baseHp, perPlayerHp, playerExponent = 1 } = config.BOSS_BASE_STATS;
   const archMult = config.ARCHETYPES[boss.archetype].hpMult;
   // Разброс ×(0.9..1.1) через внедрённый rng (контракт: целое из [min, max]).
   const roll = 0.9 + rand01(rng) * 0.2;
-  const calculatedMaxHp = Math.round((baseHp + perPlayerHp * playerCount) * archMult * roll);
+  const calculatedMaxHp = Math.round((baseHp + perPlayerHp * Math.pow(playerCount, playerExponent)) * archMult * roll);
 
   boss.maxHp = calculatedMaxHp;
   boss.hp = calculatedMaxHp;
@@ -134,14 +134,22 @@ export function healBoss(boss, amount) {
   boss.hp = Math.min(boss.maxHp, boss.hp + amount);
 }
 
-// Множители пересчитываются из активных статусов.
+// Множители пересчитываются из активных статусов: статусы с одним id не складываются
+// (действует самый сильный), разные — перемножаются.
 function recomputeStatusMults(boss) {
-  let taken = 1.0;
-  let dealt = 1.0;
-  for (const s of boss.statusEffects) {
-    if (s.damageTakenMult) taken *= s.damageTakenMult;
-    if (s.damageDealtMult) dealt *= s.damageDealtMult;
-  }
+  const strongest = (key) => {
+    const byId = new Map();
+    for (const s of boss.statusEffects) {
+      if (!s[key]) continue;
+      const prev = byId.get(s.id);
+      if (prev === undefined || Math.abs(s[key] - 1) > Math.abs(prev - 1)) byId.set(s.id, s[key]);
+    }
+    let m = 1.0;
+    for (const v of byId.values()) m *= v;
+    return m;
+  };
+  const taken = strongest('damageTakenMult');
+  const dealt = strongest('damageDealtMult');
   boss.damageTakenMult = taken;
   boss.damageDealtMult = dealt;
 }

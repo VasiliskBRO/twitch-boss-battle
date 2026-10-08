@@ -12,8 +12,11 @@ export const CONFIG = {
     holy: { name: 'святой', emoji: '✨' },
   },
   BOSS_BASE_STATS: {
-    baseHp: 1500,
+    // HP = (baseHp + perPlayerHp × игроков^playerExponent) × hpMult архетипа × 0.9..1.1.
+    // Степень > 1: большой отряд бьёт стабильнее (случайности усредняются), ему нужен запас HP.
+    baseHp: 300,
     perPlayerHp: 300,
+    playerExponent: 1.08,
   },
   SKILL_WEIGHTS: {
     single: 40,
@@ -36,7 +39,7 @@ export const CONFIG = {
     MANA_REGEN_PERCENT: 0.10,
     DOWNED_TURNS: 2,
     REVIVE_HP_PERCENT: 0.30,
-    AUTO_ACTION_POWER: 0.5,
+    AUTO_ACTION_POWER: 0.75,
   },
   // Порядок ключей задаёт пороги при выборе по хешу.
   ELEMENT_CHANCES: {
@@ -85,8 +88,8 @@ export const CONFIG = {
       mana: 100,
       nativeDamageType: 'magic',
       skills: {
-        attack: { name: 'Искра', manaCost: 0, power: 50 },
-        skill: { name: 'Шар', manaCost: 40, power: 125 },
+        attack: { name: 'Искра', manaCost: 0, power: 42 },
+        skill: { name: 'Шар', manaCost: 40, power: 100 },
       },
     },
     healer: {
@@ -202,8 +205,8 @@ export const CONFIG = {
   },
   // ===== Часть 6: очки, рейтинг и звания =====
   POINTS: {
-    // вклад = damage × 1.0 + healing × 1.2 + absorbed × 0.5 + support × 1.0
-    weights: { damage: 1.0, healing: 1.2, absorbed: 0.5, support: 1.0 },
+    // вклад = damage × 1.0 + healing × 1.8 + absorbed × 0.5 + support × 1.0
+    weights: { damage: 1.0, healing: 1.8, absorbed: 0.5, support: 1.0 },
     turnContributionCap: 0.10, // потолок вклада игрока за ход — доля макс. HP босса
     minActiveTurns: 2, // участник: столько явных команд за бой
     excludeUserIds: ['nightbot', 'streamelements', 'moobot', 'streamlabs'], // сравнение без учёта регистра
@@ -265,7 +268,7 @@ export const CONFIG = {
     undead: {
       name: 'Нежить',
       emoji: '💀',
-      hpMult: 1.1,
+      hpMult: 0.95,
       dmgMult: 0.9,
       nouns: {
         m: ['Лич', 'Скелет', 'Рыцарь', 'Зомби'],
@@ -319,7 +322,7 @@ export const CONFIG = {
     golem: {
       name: 'Голем',
       emoji: '🗿',
-      hpMult: 1.3,
+      hpMult: 1.0,
       dmgMult: 0.8,
       nouns: {
         m: ['Страж', 'Колосс', 'Титана', 'Голем'],
@@ -346,7 +349,7 @@ export const CONFIG = {
     elemental: {
       name: 'Элементаль',
       emoji: '🌀',
-      hpMult: 0.9,
+      hpMult: 1.0,
       dmgMult: 1.1,
       nouns: {
         m: ['Дух', 'Вихрь', 'Поток', 'Элементаль'],
@@ -373,7 +376,7 @@ export const CONFIG = {
     dragon: {
       name: 'Дракон',
       emoji: '🐉',
-      hpMult: 1.2,
+      hpMult: 0.95,
       dmgMult: 1.1,
       nouns: {
         m: ['Дракон', 'Змей', 'Тиран', 'Владыка'],

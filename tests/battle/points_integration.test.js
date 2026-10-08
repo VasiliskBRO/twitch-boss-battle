@@ -115,7 +115,7 @@ test('!рука: стример получает руку с описаниям�
 
 // ---------- Поддержка ----------
 
-test('Поддержка: Благословение делится поровну между источниками; Боевой клич стримера не даёт поддержки', () => {
+test('Поддержка: два Благословения не складываются, поддержка делится поровну между источниками; Боевой клич стримера не даёт поддержки', () => {
   const b = startBattle({ players: [['h1', 'хиллер'], ['h2', 'хиллер'], ['w', 'воин']] });
   b.giveSkill('h1', 'blessing');
   b.giveSkill('h2', 'blessing');
@@ -124,8 +124,8 @@ test('Поддержка: Благословение делится поровн
   b.say('w', '!атака');
   b.telegraph(SKILLS.armor);
   b.resolve();
-  const dealt = Math.round(40 * 1.25 * 1.25); // 63
-  const extra = dealt * (1 - 1 / (1.25 * 1.25));
+  const dealt = Math.round(40 * 1.25); // 50: одинаковые бусты не перемножаются, действует самый сильный
+  const extra = dealt * (1 - 1 / 1.25);
   assert.strictEqual(b.p('w').stats.damage, dealt);
   assert.ok(Math.abs(b.p('h1').stats.support - extra / 2) < 0.02, `${b.p('h1').stats.support}`);
   assert.strictEqual(b.p('h1').stats.support, b.p('h2').stats.support);

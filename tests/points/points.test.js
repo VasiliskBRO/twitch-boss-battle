@@ -21,7 +21,7 @@ const tmpFile = () => path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'points-')
 // ---------- Вклад ----------
 
 test('Вклад: веса из конфига; потолок применяется к каждому ходу отдельно', () => {
-  assert.strictEqual(computeContribution(stats({ damage: 100, healing: 100, absorbed: 100, support: 100 })), 100 + 120 + 50 + 100);
+  assert.strictEqual(computeContribution(stats({ damage: 100, healing: 100, absorbed: 100, support: 100 })), 100 + 180 + 50 + 100);
   assert.strictEqual(computeContribution(stats({ damage: 999, contribution: 42 })), 42, 'итог движка в приоритете');
   const turns = [{ damage: 800 }, { damage: 100 }, { healing: 1000 }];
   // потолок 10% × 5000 = 500 на ход: 500 + 100 + 500
