@@ -57,6 +57,7 @@ export function createBot({
   queue.setConnected(Boolean(adapter.isConnected)); // до подключения ничего не отправляем
   let engine = createBattleEngine({ config, rng, now, store });
   let statusLastMs = null;
+  let supportLastMs = null;
   let lastSaved = { phase: null, turn: null, at: -Infinity };
   let tickRunning = null; // момент начала незавершённого тика
   let intervals = [];
@@ -137,11 +138,24 @@ export function createBot({
     }];
   }
 
+  // !поддержатьигру — любой зритель, не чаще раза в supportCooldownSeconds на весь чат.
+  function supportLink() {
+    if (!T.supportUrl) return [];
+    const t = now();
+    if (supportLastMs != null && t - supportLastMs < T.supportCooldownSeconds * 1000) return [];
+    supportLastMs = t;
+    return [{ text: `💛 Поддержать разработчика игры: ${T.supportUrl}`, to: 'chat', priority: 'low' }];
+  }
+
   async function processEvent(event) {
     stats.processed++;
     const command = event.text.trim().toLowerCase().split(/\s+/)[0];
     if (command === '!ботстатус') {
       enqueueAll(botStatus(event));
+      return;
+    }
+    if (command === '!поддержатьигру') {
+      enqueueAll(supportLink());
       return;
     }
     enqueueAll(await engine.handleMessage(event)); // await — на случай асинхронного движка

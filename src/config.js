@@ -165,6 +165,9 @@ export const CONFIG = {
     reconnectInitialSeconds: 1,
     reconnectMaxSeconds: 60,
     botStatusCooldownSeconds: 30,
+    // !поддержатьигру — ссылка на донат автору игры (не секрет; одинакова для всех, кто запускает бота).
+    supportUrl: 'https://www.donationalerts.com/r/vovannoob',
+    supportCooldownSeconds: 60, // общий кулдаун на весь чат
     authPort: 3000, // redirect URI: http://localhost:3000/callback
     // Скоупы по документации Твича (EventSub channel.chat.message + Send Chat Message API).
     scopes: ['user:read:chat', 'user:write:chat', 'user:read:moderated_channels'],

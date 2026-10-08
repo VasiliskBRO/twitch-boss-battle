@@ -264,3 +264,21 @@ test('Остановка: high успевают уйти, состояние с�
   assert.strictEqual(h.adapter.isConnected, false);
   assert.ok(fs.existsSync(file));
 });
+
+test('!поддержатьигру: ссылка на донат любому зрителю, не чаще раза в минуту на весь чат', async () => {
+  const h = harness();
+  await h.bot.start();
+  await h.say('viewer1', '!ПоддержатьИгру');
+  await h.run(500);
+  assert.deepStrictEqual(h.adapter.sent.map((s) => [s.text, s.priority]), [
+    [`💛 Поддержать разработчика игры: ${T.supportUrl}`, 'low'],
+  ]);
+  assert.match(T.supportUrl, /^https:\/\/www\.donationalerts\.com\/r\/\S+$/);
+  await h.say('viewer2', '!поддержатьигру');
+  await h.run(500);
+  assert.strictEqual(h.adapter.sent.length, 1, 'общий кулдаун: второй зритель в ту же минуту — без ответа');
+  await h.run(60_000);
+  await h.say('viewer2', '!поддержатьигру');
+  await h.run(500);
+  assert.strictEqual(h.adapter.sent.length, 2);
+});
