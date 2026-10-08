@@ -1,0 +1,482 @@
+{
+  "version": 1,
+  "users": {
+    "id_0": {
+      "userId": "id_0",
+      "displayName": "Ворон",
+      "totalPoints": 2239,
+      "battles": 17,
+      "wins": 8,
+      "mvps": 3,
+      "lastHits": 1,
+      "totalDamage": 7272,
+      "totalHealing": 1899,
+      "totalSupport": 1461.6799999999998,
+      "bestBattlePoints": 335,
+      "titles": [
+        "mvp_1",
+        "wins_1",
+        "battles_10",
+        "wins_5"
+      ],
+      "firstSeenAt": 1760000450000,
+      "lastSeenAt": 1760011275000
+    },
+    "id_1": {
+      "userId": "id_1",
+      "displayName": "Ёжик_TV",
+      "totalPoints": 2710,
+      "battles": 18,
+      "wins": 11,
+      "mvps": 2,
+      "lastHits": 2,
+      "totalDamage": 10906,
+      "totalHealing": 746,
+      "totalSupport": 1702.67,
+      "bestBattlePoints": 250,
+      "titles": [
+        "wins_1",
+        "wins_5",
+        "mvp_1",
+        "battles_10"
+      ],
+      "firstSeenAt": 1760000450000,
+      "lastSeenAt": 1760011275000
+    },
+    "id_3": {
+      "userId": "id_3",
+      "displayName": "кот_учёный",
+      "totalPoints": 2632,
+      "battles": 17,
+      "wins": 10,
+      "mvps": 4,
+      "lastHits": 4,
+      "totalDamage": 10454,
+      "totalHealing": 731,
+      "totalSupport": 382.5,
+      "bestBattlePoints": 362,
+      "titles": [
+        "mvp_1",
+        "wins_1",
+        "battles_10",
+        "wins_5"
+      ],
+      "firstSeenAt": 1760000450000,
+      "lastSeenAt": 1760011275000
+    },
+    "id_4": {
+      "userId": "id_4",
+      "displayName": "Strelok",
+      "totalPoints": 2616,
+      "battles": 19,
+      "wins": 10,
+      "mvps": 2,
+      "lastHits": 0,
+      "totalDamage": 12228,
+      "totalHealing": 924,
+      "totalSupport": 408,
+      "bestBattlePoints": 356,
+      "titles": [
+        "wins_1",
+        "wins_5",
+        "battles_10",
+        "mvp_1"
+      ],
+      "firstSeenAt": 1760000450000,
+      "lastSeenAt": 1760010725000
+    },
+    "id_5": {
+      "userId": "id_5",
+      "displayName": "Магистр",
+      "totalPoints": 1952,
+      "battles": 16,
+      "wins": 10,
+      "mvps": 0,
+      "lastHits": 0,
+      "totalDamage": 5869,
+      "totalHealing": 1173,
+      "totalSupport": 1772.6799999999998,
+      "bestBattlePoints": 209,
+      "titles": [
+        "wins_1",
+        "wins_5",
+        "battles_10"
+      ],
+      "firstSeenAt": 1760000450000,
+      "lastSeenAt": 1760011275000
+    },
+    "id_6": {
+      "userId": "id_6",
+      "displayName": "ДобрыйДоктор",
+      "totalPoints": 2168,
+      "battles": 17,
+      "wins": 9,
+      "mvps": 2,
+      "lastHits": 1,
+      "totalDamage": 9199,
+      "totalHealing": 716,
+      "totalSupport": 456.78,
+      "bestBattlePoints": 446,
+      "titles": [
+        "wins_1",
+        "mvp_1",
+        "battles_10",
+        "wins_5"
+      ],
+      "firstSeenAt": 1760000450000,
+      "lastSeenAt": 1760011275000
+    },
+    "id_7": {
+      "userId": "id_7",
+      "displayName": "paladin_77",
+      "totalPoints": 2473,
+      "battles": 16,
+      "wins": 9,
+      "mvps": 4,
+      "lastHits": 0,
+      "totalDamage": 7147,
+      "totalHealing": 1777,
+      "totalSupport": 1042.86,
+      "bestBattlePoints": 386,
+      "titles": [
+        "wins_1",
+        "mvp_1",
+        "wins_5",
+        "battles_10"
+      ],
+      "firstSeenAt": 1760000450000,
+      "lastSeenAt": 1760011275000
+    },
+    "id_10": {
+      "userId": "id_10",
+      "displayName": "бабушка_Зина",
+      "totalPoints": 1116,
+      "battles": 12,
+      "wins": 6,
+      "mvps": 0,
+      "lastHits": 0,
+      "totalDamage": 4282,
+      "totalHealing": 999,
+      "totalSupport": 584.8,
+      "bestBattlePoints": 159,
+      "titles": [
+        "wins_1",
+        "wins_5",
+        "battles_10"
+      ],
+      "firstSeenAt": 1760000450000,
+      "lastSeenAt": 1760010725000
+    },
+    "id_11": {
+      "userId": "id_11",
+      "displayName": "Тихоня",
+      "totalPoints": 894,
+      "battles": 11,
+      "wins": 6,
+      "mvps": 0,
+      "lastHits": 0,
+      "totalDamage": 3075,
+      "totalHealing": 398,
+      "totalSupport": 306.6,
+      "bestBattlePoints": 142,
+      "titles": [
+        "wins_1",
+        "wins_5",
+        "battles_10"
+      ],
+      "firstSeenAt": 1760000450000,
+      "lastSeenAt": 1760010125000
+    },
+    "id_14": {
+      "userId": "id_14",
+      "displayName": "PixelKnight",
+      "totalPoints": 1021,
+      "battles": 9,
+      "wins": 6,
+      "mvps": 0,
+      "lastHits": 0,
+      "totalDamage": 4167,
+      "totalHealing": 340,
+      "totalSupport": 10,
+      "bestBattlePoints": 164,
+      "titles": [
+        "wins_1",
+        "wins_5"
+      ],
+      "firstSeenAt": 1760000450000,
+      "lastSeenAt": 1760011275000
+    },
+    "id_15": {
+      "userId": "id_15",
+      "displayName": "Чай_с_мятой",
+      "totalPoints": 864,
+      "battles": 9,
+      "wins": 5,
+      "mvps": 0,
+      "lastHits": 0,
+      "totalDamage": 3012,
+      "totalHealing": 712,
+      "totalSupport": 22,
+      "bestBattlePoints": 185,
+      "titles": [
+        "wins_1",
+        "wins_5"
+      ],
+      "firstSeenAt": 1760000450000,
+      "lastSeenAt": 1760010725000
+    },
+    "id_18": {
+      "userId": "id_18",
+      "displayName": "Mr_Bean",
+      "totalPoints": 888,
+      "battles": 9,
+      "wins": 5,
+      "mvps": 0,
+      "lastHits": 0,
+      "totalDamage": 3689,
+      "totalHealing": 326,
+      "totalSupport": 566.8299999999999,
+      "bestBattlePoints": 159,
+      "titles": [
+        "wins_1",
+        "wins_5"
+      ],
+      "firstSeenAt": 1760000450000,
+      "lastSeenAt": 1760011275000
+    },
+    "id_20": {
+      "userId": "id_20",
+      "displayName": "Барон",
+      "totalPoints": 1321,
+      "battles": 10,
+      "wins": 6,
+      "mvps": 1,
+      "lastHits": 2,
+      "totalDamage": 3674,
+      "totalHealing": 914,
+      "totalSupport": 176.74,
+      "bestBattlePoints": 406,
+      "titles": [
+        "wins_1",
+        "mvp_1",
+        "wins_5",
+        "battles_10"
+      ],
+      "firstSeenAt": 1760000450000,
+      "lastSeenAt": 1760010125000
+    },
+    "id_22": {
+      "userId": "id_22",
+      "displayName": "Тапок",
+      "totalPoints": 609,
+      "battles": 8,
+      "wins": 3,
+      "mvps": 0,
+      "lastHits": 0,
+      "totalDamage": 3026,
+      "totalHealing": 344,
+      "totalSupport": 144,
+      "bestBattlePoints": 148,
+      "titles": [
+        "wins_1"
+      ],
+      "firstSeenAt": 1760000450000,
+      "lastSeenAt": 1760011275000
+    },
+    "id_23": {
+      "userId": "id_23",
+      "displayName": "Дед_Мороз",
+      "totalPoints": 843,
+      "battles": 12,
+      "wins": 6,
+      "mvps": 0,
+      "lastHits": 0,
+      "totalDamage": 1559,
+      "totalHealing": 1367,
+      "totalSupport": 162,
+      "bestBattlePoints": 128,
+      "titles": [
+        "wins_1",
+        "wins_5",
+        "battles_10"
+      ],
+      "firstSeenAt": 1760000450000,
+      "lastSeenAt": 1760010125000
+    },
+    "id_2": {
+      "userId": "id_2",
+      "displayName": "NightOwl",
+      "totalPoints": 1960,
+      "battles": 16,
+      "wins": 10,
+      "mvps": 1,
+      "lastHits": 0,
+      "totalDamage": 7456,
+      "totalHealing": 1291,
+      "totalSupport": 957.22,
+      "bestBattlePoints": 247,
+      "titles": [
+        "wins_1",
+        "mvp_1",
+        "wins_5",
+        "battles_10"
+      ],
+      "firstSeenAt": 1760000950000,
+      "lastSeenAt": 1760011275000
+    },
+    "id_19": {
+      "userId": "id_19",
+      "displayName": "Снежок",
+      "totalPoints": 467,
+      "battles": 8,
+      "wins": 2,
+      "mvps": 0,
+      "lastHits": 0,
+      "totalDamage": 2060,
+      "totalHealing": 261,
+      "totalSupport": 132,
+      "bestBattlePoints": 108,
+      "titles": [
+        "wins_1"
+      ],
+      "firstSeenAt": 1760000950000,
+      "lastSeenAt": 1760010725000
+    },
+    "id_21": {
+      "userId": "id_21",
+      "displayName": "Ночная_смена",
+      "totalPoints": 1043,
+      "battles": 9,
+      "wins": 6,
+      "mvps": 1,
+      "lastHits": 0,
+      "totalDamage": 2983,
+      "totalHealing": 483,
+      "totalSupport": 315.5,
+      "bestBattlePoints": 324,
+      "titles": [
+        "wins_1",
+        "mvp_1",
+        "wins_5"
+      ],
+      "firstSeenAt": 1760000950000,
+      "lastSeenAt": 1760010725000
+    },
+    "id_8": {
+      "userId": "id_8",
+      "displayName": "Лиса",
+      "totalPoints": 1225,
+      "battles": 13,
+      "wins": 7,
+      "mvps": 0,
+      "lastHits": 0,
+      "totalDamage": 4179,
+      "totalHealing": 810,
+      "totalSupport": 429,
+      "bestBattlePoints": 198,
+      "titles": [
+        "wins_1",
+        "wins_5",
+        "battles_10"
+      ],
+      "firstSeenAt": 1760001550000,
+      "lastSeenAt": 1760010125000
+    },
+    "id_9": {
+      "userId": "id_9",
+      "displayName": "xXx_Pro_xXx",
+      "totalPoints": 506,
+      "battles": 5,
+      "wins": 3,
+      "mvps": 0,
+      "lastHits": 0,
+      "totalDamage": 1826,
+      "totalHealing": 321,
+      "totalSupport": 0,
+      "bestBattlePoints": 179,
+      "titles": [
+        "wins_1"
+      ],
+      "firstSeenAt": 1760001550000,
+      "lastSeenAt": 1760009600000
+    },
+    "id_13": {
+      "userId": "id_13",
+      "displayName": "Шаман",
+      "totalPoints": 1113,
+      "battles": 9,
+      "wins": 7,
+      "mvps": 0,
+      "lastHits": 0,
+      "totalDamage": 3830,
+      "totalHealing": 192,
+      "totalSupport": 188.28,
+      "bestBattlePoints": 238,
+      "titles": [
+        "wins_1",
+        "wins_5"
+      ],
+      "firstSeenAt": 1760001550000,
+      "lastSeenAt": 1760010125000
+    },
+    "id_12": {
+      "userId": "id_12",
+      "displayName": "Gromila",
+      "totalPoints": 769,
+      "battles": 9,
+      "wins": 3,
+      "mvps": 0,
+      "lastHits": 0,
+      "totalDamage": 2868,
+      "totalHealing": 1075,
+      "totalSupport": 93,
+      "bestBattlePoints": 191,
+      "titles": [
+        "wins_1"
+      ],
+      "firstSeenAt": 1760002750000,
+      "lastSeenAt": 1760010725000
+    },
+    "id_17": {
+      "userId": "id_17",
+      "displayName": "Кузя",
+      "totalPoints": 546,
+      "battles": 7,
+      "wins": 3,
+      "mvps": 0,
+      "lastHits": 0,
+      "totalDamage": 1648,
+      "totalHealing": 546,
+      "totalSupport": 822.58,
+      "bestBattlePoints": 133,
+      "titles": [
+        "wins_1"
+      ],
+      "firstSeenAt": 1760002750000,
+      "lastSeenAt": 1760011275000
+    }
+  },
+  "processedBattles": [
+    "battle-1760000000000-455407",
+    "battle-1760000600000-51163",
+    "battle-1760001100000-803931",
+    "battle-1760001700000-73537",
+    "battle-1760002300000-356971",
+    "battle-1760002900000-871965",
+    "battle-1760003500000-257061",
+    "battle-1760004075000-940649",
+    "battle-1760004675000-263460",
+    "battle-1760005100000-541162",
+    "battle-1760005600000-554127",
+    "battle-1760006200000-377510",
+    "battle-1760006800000-35973",
+    "battle-1760007375000-824599",
+    "battle-1760007950000-265347",
+    "battle-1760008550000-503706",
+    "battle-1760009150000-113471",
+    "battle-1760009750000-591175",
+    "battle-1760010275000-464035",
+    "battle-1760010875000-221590"
+  ],
+  "updatedAt": 1791407300008
+}

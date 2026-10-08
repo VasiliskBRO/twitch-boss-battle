@@ -1,0 +1,17 @@
+# Секреты
+.env
+data/tokens.json
+data/tokens.json.tmp
+
+# Рабочие данные и логи
+data/battle*.json
+data/*.corrupt
+data/points.json*
+data/points.console.json*
+# личные игры из play.js
+data/points.play.json*
+data/*.bak
+data/*.tmp
+logs/
+
+node_modules/

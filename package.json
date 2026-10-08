@@ -1,0 +1,23 @@
+{
+  "name": "twitch-boss-battle",
+  "version": "1.0.0",
+  "description": "Чат-игра для Твича: чат вместе сражается с боссом",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test",
+    "start": "node bot.js",
+    "console": "node bot.js --console",
+    "auth": "node auth.js",
+    "loadtest": "node bot.js --loadtest 300"
+  },
+  "dependencies": {
+    "@twurple/api": "8.2.0",
+    "@twurple/auth": "8.2.0",
+    "@twurple/eventsub-ws": "8.2.0",
+    "dotenv": "18.0.6"
+  }
+}
