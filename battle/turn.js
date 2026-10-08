@@ -47,6 +47,11 @@ function newTurnLog(state) {
   };
 }
 
+// Сколько секунд даётся на ход: первый ход длиннее, чтобы игроки осмотрелись.
+export function turnWindowFor(turn, config) {
+  return turn === 1 ? config.BATTLE.firstTurnWindowSeconds ?? config.BATTLE.turnWindowSeconds : config.BATTLE.turnWindowSeconds;
+}
+
 // ---------- Начало хода (раздел 4) ----------
 
 export function startTurn(ctx) {
@@ -65,7 +70,7 @@ export function startTurn(ctx) {
   for (const card of momentCards) for (const e of card.effects) applyEffect(ctx, e);
 
   state.pendingTelegraph = structuredClone(pickTelegraph(state.boss, rng, config));
-  state.turnEndsAtMs = now() + config.BATTLE.turnWindowSeconds * 1000;
+  state.turnEndsAtMs = now() + turnWindowFor(state.turn, config) * 1000;
 
   // В конец заголовка — короткая строка руки стримера; при закрытой руке подробная — на консоль.
   const hand = renderHandCompact(state.streamer, state.turn, config);

@@ -95,7 +95,8 @@ export function startBattle({ players, seed = 1, config = DET, neutral = true, b
       return record(eng.handleMessage({ userId: ids[alias], displayName: alias, text: '!join', roles: VIEWER }));
     },
     telegraph: (skill) => { st.pendingTelegraph = { ...skill }; },
-    resolve: () => { clock.advance(config.BATTLE.turnWindowSeconds * 1000); return record(eng.tick()); },
+    // Доводит часы ровно до конца окна текущего хода (первый ход длиннее остальных).
+    resolve: () => { clock.advance(Math.max(0, st.turnEndsAtMs - clock.now())); return record(eng.tick()); },
     giveSkill: (alias, skillId, rarity = 'common') => {
       const p = st.registry.get(idOf(alias));
       p.personalSkill = { skillId, rarity };

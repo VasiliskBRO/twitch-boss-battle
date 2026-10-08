@@ -1,2 +1,4 @@
 # Единые концы строк (LF) на всех системах: иначе на Windows golden-тест сравнивал бы CRLF с LF.
 * text=auto eol=lf
+# .bat-файлы Windows — с CRLF, иначе cmd может их неправильно читать
+*.bat text eol=crlf

@@ -282,3 +282,19 @@ test('!поддержатьигру: ссылка на донат любому �
   await h.run(500);
   assert.strictEqual(h.adapter.sent.length, 2);
 });
+
+test('!гайд и !помощь: ссылка на правила для игроков, раз в минуту на весь чат', async () => {
+  const h = harness();
+  await h.bot.start();
+  await h.say('viewer1', '!Гайд');
+  await h.run(500);
+  assert.deepStrictEqual(h.adapter.sent.map((s) => [s.text, s.priority]), [[`📖 Как играть: ${T.guideUrl}`, 'low']]);
+  assert.ok(T.guideUrl.startsWith('https://github.com/') && T.guideUrl.endsWith('#для-игроков'));
+  await h.say('viewer2', '!помощь');
+  await h.run(500);
+  assert.strictEqual(h.adapter.sent.length, 1, 'общий кулдаун на обе команды');
+  await h.run(60_000);
+  await h.say('viewer2', '!помощь');
+  await h.run(500);
+  assert.strictEqual(h.adapter.sent.length, 2);
+});

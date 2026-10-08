@@ -67,7 +67,7 @@ export class TwurpleAdapter {
 
   readTokens() {
     if (!fs.existsSync(this.tokensFile)) {
-      throw new Error(`нет ${this.tokensFile} — сначала запустите: node auth.js`);
+      throw new Error(`нет ${this.tokensFile} — сначала запустите «Установить.bat» (node setup.js)`);
     }
     const data = JSON.parse(fs.readFileSync(this.tokensFile, 'utf8'));
     this.log.addSecret(data.accessToken);
@@ -87,7 +87,8 @@ export class TwurpleAdapter {
     const { ApiClient } = await import('@twurple/api');
     const { EventSubWsListener } = await import('@twurple/eventsub-ws');
 
-    const authProvider = new RefreshingAuthProvider({ clientId: this.clientId, clientSecret: this.clientSecret });
+    // Секрет есть только у своего (Confidential) приложения; публичное обновляет токен без него.
+    const authProvider = new RefreshingAuthProvider(this.clientSecret ? { clientId: this.clientId, clientSecret: this.clientSecret } : { clientId: this.clientId });
     // Новый токен записывается в tokens.json при каждом обновлении.
     authProvider.onRefresh((userId, newTokenData) => {
       this.log.addSecret(newTokenData.accessToken);
@@ -96,7 +97,7 @@ export class TwurpleAdapter {
       this.log.info('токен бота обновлён и сохранён');
     });
     authProvider.onRefreshFailure((userId, error) => {
-      this.log.error(`не удалось обновить токен: ${error?.message ?? error}. Запустите node auth.js заново`);
+      this.log.error(`не удалось обновить токен: ${error?.message ?? error}. Запустите «Установить.bat» (node setup.js) ещё раз — например, если бот не запускался больше 30 дней`);
     });
 
     const botId = await authProvider.addUserForToken(this.readTokens(), ['chat']);

@@ -58,6 +58,7 @@ export function createBot({
   let engine = createBattleEngine({ config, rng, now, store });
   let statusLastMs = null;
   let supportLastMs = null;
+  let guideLastMs = null;
   let lastSaved = { phase: null, turn: null, at: -Infinity };
   let tickRunning = null; // момент начала незавершённого тика
   let intervals = [];
@@ -147,11 +148,24 @@ export function createBot({
     return [{ text: `💛 Поддержать разработчика игры: ${T.supportUrl}`, to: 'chat', priority: 'low' }];
   }
 
+  // !гайд и !помощь — любой зритель, не чаще раза в guideCooldownSeconds на весь чат.
+  function guideLink() {
+    if (!T.guideUrl) return [];
+    const t = now();
+    if (guideLastMs != null && t - guideLastMs < T.guideCooldownSeconds * 1000) return [];
+    guideLastMs = t;
+    return [{ text: `📖 Как играть: ${T.guideUrl}`, to: 'chat', priority: 'low' }];
+  }
+
   async function processEvent(event) {
     stats.processed++;
     const command = event.text.trim().toLowerCase().split(/\s+/)[0];
     if (command === '!ботстатус') {
       enqueueAll(botStatus(event));
+      return;
+    }
+    if (command === '!гайд' || command === '!помощь') {
+      enqueueAll(guideLink());
       return;
     }
     if (command === '!поддержатьигру') {

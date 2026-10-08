@@ -53,12 +53,12 @@ export function renderBossHp(boss) {
   return clip(`${boss.emoji} ${boss.name}: ❤️ ${renderHpBar(boss)}`, MAX);
 }
 
-// «⚔️ Ход 3/15 | 🐉 Ржавый Дракон Бездны [██████░░░░] 7200/12000 | ⚠️ Готовит «Огненное дыхание» по всем! | !атака !навык !особый (25 с)»
+// «⚔️ Ход 3/15 | 🐉 Ржавый Дракон Бездны [██████░░░░] 7200/12000 | ⚠️ Готовит «Огненное дыхание» по всем! | !атака !навык !особый (40 с)»
 export function renderTurnHeader(state, config) {
   const { boss, pendingTelegraph: skill } = state;
   const threat = skill ? `⚠️ Готовит «${skill.name}» ${TARGET_TEXT[skill.kind] ?? ''}`.trim() : '⚠️ Босс медлит';
   return clip(
-    `⚔️ Ход ${state.turn}/${config.BATTLE.maxTurns} | ${boss.emoji} ${boss.name} ${renderHpBar(boss)} | ${threat} | !атака !навык !особый (${config.BATTLE.turnWindowSeconds} с)`,
+    `⚔️ Ход ${state.turn}/${config.BATTLE.maxTurns} | ${boss.emoji} ${boss.name} ${renderHpBar(boss)} | ${threat} | !атака !навык !особый (${state.turn === 1 ? config.BATTLE.firstTurnWindowSeconds ?? config.BATTLE.turnWindowSeconds : config.BATTLE.turnWindowSeconds} с)`,
     MAX,
   );
 }

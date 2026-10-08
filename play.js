@@ -2,7 +2,7 @@
 // Локальная игра в терминале: вы пишете команды как в чате Твича, вокруг сражаются боты.
 // Вы одновременно стример (!босс, !карта, !стоп) и игрок (!join, !атака, !навык, !особый, !я).
 //
-//   node play.js                      — 10 ботов, настоящие тайминги (лобби 75 с, ход 25 с)
+//   node play.js                      — 10 ботов, настоящие тайминги (лобби 75 с, ход 40 с, первый — 60 с)
 //   node play.js --bots 20 --fast     — ускоренно: лобби 20 с, ход 10 с, пауза между боями 5 с
 //   node play.js --private            — закрытая рука стримера (карты видны как [консоль])
 //
@@ -51,6 +51,7 @@ const config = {
     ...CONFIG.BATTLE,
     lobbySeconds: args.lobby ?? (args.fast ? 20 : CONFIG.BATTLE.lobbySeconds),
     turnWindowSeconds: args.turn ?? (args.fast ? 10 : CONFIG.BATTLE.turnWindowSeconds),
+    firstTurnWindowSeconds: args.turn ?? (args.fast ? 15 : CONFIG.BATTLE.firstTurnWindowSeconds),
     pauseAfterBattleSeconds: args.pause ?? (args.fast ? 5 : CONFIG.BATTLE.pauseAfterBattleSeconds),
     lobbyProgressSeconds: args.fast ? 8 : CONFIG.BATTLE.lobbyProgressSeconds,
   },

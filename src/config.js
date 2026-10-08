@@ -124,7 +124,8 @@ export const CONFIG = {
     lobbySeconds: 75,
     lobbyProgressSeconds: 20,
     minPlayers: 1,
-    turnWindowSeconds: 25,
+    turnWindowSeconds: 40, // время на ход: изучить персонажа, обсудить тактику, отправить команду
+    firstTurnWindowSeconds: 60, // первый ход длиннее — осмотреться (!я, !гайд)
     maxTurns: 15,
     meCooldownSeconds: 20,
     pauseAfterBattleSeconds: 150,
@@ -168,7 +169,13 @@ export const CONFIG = {
     // !поддержатьигру — ссылка на донат автору игры (не секрет; одинакова для всех, кто запускает бота).
     supportUrl: 'https://www.donationalerts.com/r/vovannoob',
     supportCooldownSeconds: 60, // общий кулдаун на весь чат
-    authPort: 3000, // redirect URI: http://localhost:3000/callback
+    // !гайд и !помощь — ссылка на правила для игроков.
+    guideUrl: 'https://github.com/VasiliskBRO/twitch-boss-battle#для-игроков',
+    guideCooldownSeconds: 60, // общий кулдаун на весь чат
+    // Публичное приложение автора игры (Client Type: Public): стримеры входят по коду (setup.js)
+    // без своей консоли разработчика. Client ID — не секрет. Своё приложение — TWITCH_CLIENT_ID в .env.
+    publicClientId: null, // TODO: вписать Client ID после регистрации приложения
+    authPort: 3000, // для старого способа auth.js: redirect URI http://localhost:3000/callback
     // Скоупы по документации Твича (EventSub channel.chat.message + Send Chat Message API).
     scopes: ['user:read:chat', 'user:write:chat', 'user:read:moderated_channels'],
     logFile: 'logs/bot.log',

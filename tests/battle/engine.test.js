@@ -146,7 +146,7 @@ test('Просроченное после перезапуска окно раз
   const msgs = eng2.tick();
   assert.ok(msgs.some((m) => m.text.startsWith('📊 Ход 1:')));
   assert.ok(msgs.at(-1).text.startsWith('⚔️ Ход 2/15'));
-  assert.strictEqual(eng2.getState().turnEndsAtMs, b.clock.now() + 25_000, 'новый ход получает полное окно');
+  assert.strictEqual(eng2.getState().turnEndsAtMs, b.clock.now() + DET.BATTLE.turnWindowSeconds * 1000, 'новый ход получает полное окно');
   assert.deepStrictEqual(eng2.tick(), []);
 });
 

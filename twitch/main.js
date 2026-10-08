@@ -102,14 +102,13 @@ async function consoleMode() {
 async function twitchMode() {
   const dotenv = await import('dotenv');
   dotenv.config({ quiet: true });
-  const required = ['TWITCH_CLIENT_ID', 'TWITCH_CLIENT_SECRET', 'TWITCH_CHANNEL', 'BOT_USER_NAME'];
-  const missing = required.filter((k) => !process.env[k]);
-  if (missing.length) {
-    console.error(`В .env не заполнено: ${missing.join(', ')}. Скопируйте .env.example в .env и заполните (см. README).`);
-    process.exit(1);
-  }
-  if (!fs.existsSync(T.tokensFile)) {
-    console.error(`Нет ${T.tokensFile}. Сначала один раз запустите: node auth.js`);
+  // Client ID: своё приложение из .env или публичное приложение автора игры; секрет — только у своего.
+  const clientId = process.env.TWITCH_CLIENT_ID || T.publicClientId;
+  const missing = ['TWITCH_CHANNEL', 'BOT_USER_NAME'].filter((k) => !process.env[k]);
+  if (!clientId) missing.unshift('TWITCH_CLIENT_ID');
+  if (missing.length || !fs.existsSync(T.tokensFile)) {
+    console.error('Бот ещё не настроен. Запустите «Установить.bat» (или node setup.js) — это займёт пару минут.');
+    if (missing.length) console.error(`   (не хватает: ${missing.join(', ')})`);
     process.exit(1);
   }
 
@@ -117,8 +116,8 @@ async function twitchMode() {
   log.addSecret(process.env.TWITCH_CLIENT_SECRET);
   const { TwurpleAdapter } = await import('./twurple_adapter.js');
   const adapter = new TwurpleAdapter({
-    clientId: process.env.TWITCH_CLIENT_ID,
-    clientSecret: process.env.TWITCH_CLIENT_SECRET,
+    clientId,
+    clientSecret: process.env.TWITCH_CLIENT_SECRET || undefined, // у публичного приложения секрета нет
     channelName: process.env.TWITCH_CHANNEL,
     botUserName: process.env.BOT_USER_NAME,
     tokensFile: T.tokensFile,
