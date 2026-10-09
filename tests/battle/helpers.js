@@ -23,7 +23,7 @@ export const DET = {
   COMBAT: { ...CONFIG.COMBAT, CRIT_CHANCE: 0, DMG_VARIANCE: { min: 1, max: 1 } },
   DAMAGE_VALUES: { single: { min: 0.3, max: 0.3 }, aoe: { min: 0.2, max: 0.2 } },
   BOSS_PHASE_DAMAGE_MULT: [1, 1, 1],
-  BATTLE: { ...CONFIG.BATTLE, healVariance: 0, bossTopDamageChance: 0 },
+  BATTLE: { ...CONFIG.BATTLE, healVariance: 0, bossTopDamageChance: 0, autoNextBoss: false },
 };
 
 export const SKILLS = {

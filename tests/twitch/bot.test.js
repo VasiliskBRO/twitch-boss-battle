@@ -169,7 +169,8 @@ test('Сквозной бой на 30 игроков: лимит в любом �
     const joins = sent.filter((s) => s.text.startsWith('⚔️ В отряд вступили'));
     assert.ok(joins.length >= 1 && joins.length <= 3, `сводок ${joins.length}`);
     assert.strictEqual(sent.filter((s) => s.text.includes('ты в отряде')).length, 0, 'не по сообщению на каждого');
-    assert.ok(sent.at(-1).text.startsWith('🏆') || sent.at(-1).text.startsWith('🏃') || sent.at(-1).text.startsWith('💀'), sent.at(-1).text);
+    const last = sent.filter((s) => !s.text.startsWith('🔁')).at(-1); // 🔁 — объявление автобосса после итога
+    assert.ok(last.text.startsWith('🏆') || last.text.startsWith('🏃') || last.text.startsWith('💀'), last.text);
     assert.strictEqual(h.bot.queue.stats.byPriority.high.dropped, 0);
     for (const s of sent) assert.ok(s.text.length <= 500);
     assert.deepStrictEqual(h.logs.error, []);

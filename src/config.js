@@ -134,7 +134,7 @@ export const CONFIG = {
     pauseAfterBattleSeconds: 150,
     // Автобосс: после победы или поражения следующий бой начинается сам через pauseAfterBattleSeconds —
     // только пока идёт стрим. Включают и выключают в чате: !автобосс вкл / выкл (стример и модераторы).
-    autoNextBoss: false,
+    autoNextBoss: true,
     bossWaitNoticeCooldownSeconds: 10, // «⏳ Следующий босс через …» на ранний !босс — не чаще
     bossTopDamageChance: 0.25, // доля одиночных атак босса по самому опасному игроку
     maxNamesInSummary: 5,

@@ -152,11 +152,14 @@ function boss(ctx) {
 }
 
 // !автобосс [вкл|выкл] — стример и модераторы. Без аргумента — показать, включён ли.
+// Включили в паузе после победы или поражения — следующий бой начнётся сам и для этого боя
+// (пауза уже прошла — на ближайшем tick).
 function autoNextCommand(ctx, text) {
-  const { state, config } = ctx;
+  const { state, config, isLive } = ctx;
   const arg = text.split(' ')[1];
   if (['вкл', 'on', 'да'].includes(arg)) {
     state.autoNext = true;
+    if (state.phase === 'ended' && state.result?.outcome !== 'cancelled' && isLive() === true) state.autoNextArmed = true;
   } else if (['выкл', 'off', 'нет'].includes(arg)) {
     state.autoNext = false;
     state.autoNextArmed = false;

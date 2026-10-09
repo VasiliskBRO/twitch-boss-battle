@@ -142,11 +142,12 @@ function winBattle({ eng, clock, say }) {
   return msgs;
 }
 
-test('Автобосс: модератор включает, после победы следующий бой начинается сам после паузы', () => {
+const AUTO_OFF = { ...CONFIG, BATTLE: { ...CONFIG.BATTLE, autoNextBoss: false } };
+
+test('Автобосс: включён по умолчанию — после победы следующий бой начинается сам после паузы', () => {
   const b = fresh();
-  assert.deepStrictEqual(b.say('v', '!автобосс вкл'), [], 'зрителю — молчание');
-  const on = b.say('mod', '!автобосс вкл', MOD);
-  assert.ok(on[0].text.startsWith('🔁 Автобосс включён'), on[0].text);
+  assert.deepStrictEqual(b.say('v', '!автобосс выкл'), [], 'зрителю — молчание');
+  assert.ok(b.say('mod', '!автобосс', MOD)[0].text.startsWith('🔁 Автобосс включён'));
   const end = winBattle(b);
   assert.ok(end.some((m) => m.text === '🔁 Следующий босс появится сам через 2:30. Отменить: !стоп, выключить автобосс: !автобосс выкл'));
   b.clock.advance(149_000);
@@ -155,15 +156,43 @@ test('Автобосс: модератор включает, после побе
   const spawn = b.eng.tick();
   assert.strictEqual(b.eng.getState().phase, 'lobby');
   assert.ok(spawn.some((m) => m.text.startsWith('📜 Запись')));
+});
+
+test('Автобосс: выключен в конфиге — модератор включает; выбор переживает смену боя', () => {
+  const b = fresh(1, AUTO_OFF);
+  assert.ok(!winBattle(b).some((m) => m.text.startsWith('🔁')));
+  b.clock.advance(150_000);
+  b.eng.tick();
+  assert.strictEqual(b.eng.getState().phase, 'ended');
+  b.say('streamer', '!босс', STREAMER);
+  b.clock.advance(75_000);
+  b.eng.tick(); // никто не пришёл
+  b.clock.advance(150_000);
+  assert.ok(b.say('mod', '!автобосс вкл', MOD)[0].text.startsWith('🔁 Автобосс включён'));
+  b.say('streamer', '!босс', STREAMER);
   assert.strictEqual(b.eng.getState().autoNext, true, 'выбор модераторов переживает смену боя');
 });
 
-test('Автобосс: по умолчанию выключен; вне стрима и после конца стрима не срабатывает', () => {
-  const off = fresh();
-  assert.ok(!winBattle(off).some((m) => m.text.startsWith('🔁')));
-  off.clock.advance(150_000);
-  off.eng.tick();
-  assert.strictEqual(off.eng.getState().phase, 'ended');
+test('Автобосс: !автобосс вкл в паузе после победы — следующий бой всё равно начнётся сам', () => {
+  const late = fresh(1, AUTO_OFF);
+  winBattle(late);
+  late.clock.advance(60_000);
+  late.say('mod', '!автобосс вкл', MOD);
+  late.clock.advance(90_000);
+  late.eng.tick();
+  assert.strictEqual(late.eng.getState().phase, 'lobby');
+
+  const afterPause = fresh(1, AUTO_OFF);
+  winBattle(afterPause);
+  afterPause.clock.advance(300_000); // пауза давно прошла
+  afterPause.say('mod', '!автобосс вкл', MOD);
+  afterPause.clock.advance(1_000);
+  afterPause.eng.tick();
+  assert.strictEqual(afterPause.eng.getState().phase, 'lobby', 'на ближайшем tick');
+});
+
+test('Автобосс: вне стрима и после конца стрима не срабатывает', () => {
+  const off = fresh(1, AUTO_OFF);
   assert.ok(off.say('mod', '!автобосс', MOD)[0].text.startsWith('⏸️ Автобосс выключен'));
 
   const offline = fresh(1, CONFIG, () => false);
@@ -215,7 +244,7 @@ test('Автобосс: !стоп в паузе отменяет ближайш�
 });
 
 test('Ранний !босс: «⏳ Следующий босс через …» не чаще раза в 10 секунд', () => {
-  const b = fresh();
+  const b = fresh(1, AUTO_OFF);
   winBattle(b);
   b.clock.advance(90_000);
   assert.deepStrictEqual(b.say('mod', '!босс', MOD).map((m) => m.text), ['⏳ Следующий босс через 1:00']);
