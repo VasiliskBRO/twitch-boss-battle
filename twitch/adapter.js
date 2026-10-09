@@ -9,6 +9,7 @@
 //   isConnected: boolean
 //   selfRoles(): { broadcaster, moderator, vip }
 //   selfUserId: string               — id аккаунта бота (его сообщения игнорируются)
+//   isLive(): boolean                — идёт ли стрим (необязательно; для автобосса)
 //
 // Весь код Twurple живёт только в twurple_adapter.js, чтобы библиотеку можно было заменить.
 

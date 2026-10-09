@@ -298,3 +298,19 @@ test('!гайд и !помощь: ссылка на правила для игр
   await h.run(500);
   assert.strictEqual(h.adapter.sent.length, 2);
 });
+
+test('Автобосс: бот передаёт движку, идёт ли стрим (isLive адаптера)', async () => {
+  const h = harness();
+  await h.bot.start();
+  await h.say('streamer', '!автобосс вкл', { broadcaster: '1' });
+  await h.say('streamer', '!босс', { broadcaster: '1' });
+  await h.say('u1', '!join');
+  await h.run(76_000);
+  h.bot.engine.getState().boss.hp = 1;
+  h.adapter.live = false; // стрим закончился
+  await h.runUntil(() => h.bot.engine.getState().phase === 'ended');
+  await h.run(160_000);
+  assert.strictEqual(h.bot.engine.getState().phase, 'ended', 'вне стрима новый бой не начинается');
+  assert.ok(!h.adapter.sent.some((m) => m.text.startsWith('🔁 Следующий босс')));
+  await h.stop();
+});

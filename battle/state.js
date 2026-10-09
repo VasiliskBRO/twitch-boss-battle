@@ -34,6 +34,9 @@ export function createInitialState() {
     suggestCooldowns: { users: {}, lastMs: null }, // кулдауны подсказок на опечатки
     joinQueue: [], // displayName вступивших, ждущих сводки
     joinQueueSinceMs: null, // когда в очередь попал первый
+    autoNext: null, // автобосс: null — как в BATTLE.autoNextBoss, иначе выбор модераторов (!автобосс)
+    autoNextArmed: false, // следующий бой запустится сам (бой закончился победой/поражением во время стрима)
+    bossWaitNoticeMs: null, // когда последний раз отвечали на ранний !босс
 
     lastHitUserId: null,
     turnLog: null, // данные для итога текущего хода

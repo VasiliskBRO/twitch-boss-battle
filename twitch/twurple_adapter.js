@@ -26,7 +26,7 @@ export function rawFromTwurpleEvent(e, channelId) {
 
 export class TwurpleAdapter {
   // log — логгер с addSecret: токены и client secret не попадают в лог.
-  constructor({ clientId, clientSecret, channelName, botUserName, tokensFile, log }) {
+  constructor({ clientId, clientSecret, channelName, botUserName, tokensFile, log, liveCheckSeconds = 60 }) {
     this.clientId = clientId;
     this.clientSecret = clientSecret;
     this.channelName = channelName;
@@ -40,6 +40,9 @@ export class TwurpleAdapter {
     this.handlers = { message: [], status: [], roles: [] };
     this.listener = null;
     this.api = null;
+    this.live = false; // пока не знаем — считаем, что стрима нет (автобосс не сработает)
+    this.liveCheckMs = liveCheckSeconds * 1000;
+    this.liveTimer = null;
     log.addSecret(clientSecret);
   }
 
@@ -47,6 +50,19 @@ export class TwurpleAdapter {
   onStatus(cb) { this.handlers.status.push(cb); }
   onRolesChange(cb) { this.handlers.roles.push(cb); }
   selfRoles() { return { ...this.roles }; }
+  isLive() { return this.live; }
+
+  // Идёт ли стрим: GET /helix/streams (скоупы не нужны). Ошибка — «стрима нет», чтобы автобосс не крутился зря.
+  async checkLive() {
+    try {
+      const live = (await this.api.streams.getStreamByUserId(this.channelId)) !== null;
+      if (live !== this.live) this.log.info(live ? 'стрим идёт' : 'стрим не идёт');
+      this.live = live;
+    } catch (err) {
+      this.live = false;
+      this.log.warn(`не удалось проверить, идёт ли стрим: ${err?.message ?? err}`);
+    }
+  }
 
   // Роли бота меняются по значкам его собственных сообщений (VIP иначе не узнать токеном бота).
   updateSelfRoles(roles) {
@@ -80,6 +96,7 @@ export class TwurpleAdapter {
     if (this.listener) {
       this.listener.stop();
       this.listener.start();
+      if (!this.liveTimer) this.startLiveChecks();
       return;
     }
 
@@ -123,6 +140,9 @@ export class TwurpleAdapter {
     this.updateSelfRoles({ broadcaster: isBroadcaster, moderator: isModerator });
     this.log.info(`бот @${botUser?.name ?? botId} в канале ${channel.name}: ${isBroadcaster ? 'стример' : isModerator ? 'модератор' : 'без прав модератора (лимиты строже)'}`);
 
+    await this.checkLive();
+    this.startLiveChecks();
+
     const listener = new EventSubWsListener({ apiClient: api });
     listener.onUserSocketConnect(() => this.setConnected(true));
     listener.onUserSocketDisconnect((userId, error) => this.setConnected(false, error));
@@ -137,7 +157,14 @@ export class TwurpleAdapter {
     listener.start();
   }
 
+  startLiveChecks() {
+    this.liveTimer = setInterval(() => { this.checkLive(); }, this.liveCheckMs);
+    this.liveTimer.unref?.();
+  }
+
   async disconnect() {
+    if (this.liveTimer) clearInterval(this.liveTimer);
+    this.liveTimer = null;
     if (this.listener) this.listener.stop();
     this.setConnected(false);
   }

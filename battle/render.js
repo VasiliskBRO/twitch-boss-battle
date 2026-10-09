@@ -15,6 +15,26 @@ const TARGET_TEXT = {
   buff: 'на себя!',
 };
 
+// 150 → «2:30».
+export function formatWait(seconds) {
+  const s = Math.max(0, Math.ceil(seconds));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
+
+export function renderAutoNextNotice(seconds) {
+  return `🔁 Следующий босс появится сам через ${formatWait(seconds)}. Отменить: !стоп, выключить автобосс: !автобосс выкл`;
+}
+
+export function renderBossWait(seconds) {
+  return `⏳ Следующий босс через ${formatWait(seconds)}`;
+}
+
+export function renderAutoNextStatus(enabled, pauseSeconds) {
+  return enabled
+    ? `🔁 Автобосс включён: после победы или поражения следующий босс появится сам через ${formatWait(pauseSeconds)} (только во время стрима). Выключить: !автобосс выкл`
+    : '⏸️ Автобосс выключен. Новый бой — !босс, включить автобосс — !автобосс вкл';
+}
+
 export function renderInvite(config) {
   const n = config.BATTLE.lobbySeconds;
   return `📜 Запись: !join (класс выдаётся случайно), ${n} ${plural(n, ['секунда', 'секунды', 'секунд'])}`;

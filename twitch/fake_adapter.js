@@ -9,6 +9,7 @@ export class FakeAdapter {
     this.now = now;
     this.onSend = onSend;
     this.isConnected = false;
+    this.live = true; // идёт ли «стрим» (для автобосса)
     this.sent = []; // { text, at, replyToMessageId }
     this.failNext = 0; // сколько следующих отправок завершить ошибкой
     this.messageHandlers = [];
@@ -37,6 +38,7 @@ export class FakeAdapter {
   onStatus(cb) { this.statusHandlers.push(cb); }
   onRolesChange(cb) { this.roleHandlers.push(cb); }
   selfRoles() { return { ...this.roles }; }
+  isLive() { return this.live; }
 
   setRoles(roles) {
     this.roles = { ...this.roles, ...roles };

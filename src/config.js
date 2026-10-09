@@ -132,6 +132,10 @@ export const CONFIG = {
     maxTurns: 15,
     meCooldownSeconds: 20,
     pauseAfterBattleSeconds: 150,
+    // Автобосс: после победы или поражения следующий бой начинается сам через pauseAfterBattleSeconds —
+    // только пока идёт стрим. Включают и выключают в чате: !автобосс вкл / выкл (стример и модераторы).
+    autoNextBoss: false,
+    bossWaitNoticeCooldownSeconds: 10, // «⏳ Следующий босс через …» на ранний !босс — не чаще
     bossTopDamageChance: 0.25, // доля одиночных атак босса по самому опасному игроку
     maxNamesInSummary: 5,
     healVariance: 0.15, // разброс лечения ±15%
@@ -169,6 +173,7 @@ export const CONFIG = {
     reconnectInitialSeconds: 1,
     reconnectMaxSeconds: 60,
     botStatusCooldownSeconds: 30,
+    liveCheckSeconds: 60, // как часто спрашивать Твич, идёт ли стрим (для автобосса)
     // !поддержатьигру — ссылка на донат автору игры (не секрет; одинакова для всех, кто запускает бота).
     supportUrl: 'https://www.donationalerts.com/r/vovannoob',
     supportCooldownSeconds: 60, // общий кулдаун на весь чат

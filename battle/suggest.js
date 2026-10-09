@@ -12,7 +12,8 @@ export const KNOWN_COMMANDS = [
   { cmd: '!очки', phases: null },
   { cmd: '!топ', phases: null },
   { cmd: '!босс', phases: ['idle', 'ended'], staff: true },
-  { cmd: '!стоп', phases: ['lobby', 'running'], staff: true },
+  { cmd: '!стоп', phases: ['lobby', 'running', 'ended'], staff: true },
+  { cmd: '!автобосс', phases: null, staff: true },
   { cmd: '!карта', phases: ['running'], staff: true },
   { cmd: '!рука', phases: ['running'], staff: true },
 ];

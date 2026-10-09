@@ -121,6 +121,7 @@ async function twitchMode() {
     channelName: process.env.TWITCH_CHANNEL,
     botUserName: process.env.BOT_USER_NAME,
     tokensFile: T.tokensFile,
+    liveCheckSeconds: T.liveCheckSeconds,
     log,
   });
   const store = createFileStore(T.pointsFile);

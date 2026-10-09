@@ -55,7 +55,9 @@ export function createBot({
   });
 
   queue.setConnected(Boolean(adapter.isConnected)); // до подключения ничего не отправляем
-  let engine = createBattleEngine({ config, rng, now, store });
+  // Идёт ли стрим (для автобосса). Адаптер без isLive() — считаем, что идёт.
+  const isLive = () => (typeof adapter.isLive === 'function' ? adapter.isLive() === true : true);
+  let engine = createBattleEngine({ config, rng, now, store, isLive });
   let statusLastMs = null;
   let supportLastMs = null;
   let guideLastMs = null;
@@ -100,7 +102,7 @@ export function createBot({
     if (!saveToDisk) return;
     const r = loadBattle(battleFile, now(), T.maxResumeMinutes * 60_000);
     if (r.status === 'resume') {
-      engine = fromJSON(r.engineJson, { config, rng, now, store });
+      engine = fromJSON(r.engineJson, { config, rng, now, store, isLive });
       engine.resume(now());
       const st = engine.getState();
       lastSaved = { phase: st.phase, turn: st.turn, at: now() };

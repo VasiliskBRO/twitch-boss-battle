@@ -17,29 +17,34 @@ import { findSuggestion, availableCommands, renderSuggestion } from './suggest.j
 import { startTurn, resolveTurn, finishBattle, chat, toConsole } from './turn.js';
 import {
   renderInvite, renderLobbyProgress, renderBossHp, renderMe, renderJoinNotice, renderJoinBatch,
+  renderAutoNextNotice, renderBossWait, renderAutoNextStatus,
 } from './render.js';
 
 const ACTION_COMMANDS = { '!атака': 'атака', '!навык': 'навык', '!особый': 'особый' };
 const POINTS_COMMANDS = new Set(['!очки', '!топ']);
 
 // store — хранилище очков (по умолчанию в памяти; для бота — createFileStore из points/).
-export function createBattleEngine({ config = CONFIG, rng, now, store = createMemoryStore() }) {
-  return makeEngine(createInitialState(), { config, rng, now, store });
+// isLive() — идёт ли сейчас стрим (для автобосса); без Твича считаем, что идёт.
+export function createBattleEngine({ config = CONFIG, rng, now, store = createMemoryStore(), isLive = () => true }) {
+  return makeEngine(createInitialState(), { config, rng, now, store, isLive });
 }
 
-// Восстановление после перезапуска: rng, now и store внедряются заново.
-export function fromJSON(data, { config = CONFIG, rng, now, store = createMemoryStore() }) {
-  return makeEngine(deserializeState(data), { config, rng, now, store });
+// Восстановление после перезапуска: rng, now, store и isLive внедряются заново.
+export function fromJSON(data, { config = CONFIG, rng, now, store = createMemoryStore(), isLive = () => true }) {
+  return makeEngine(deserializeState(data), { config, rng, now, store, isLive });
 }
 
-function makeEngine(state, { config, rng, now, store }) {
+function makeEngine(state, { config, rng, now, store, isLive }) {
   if (typeof rng !== 'function' || typeof now !== 'function') throw new Error('rng and now are required');
   // Старые сохранения (до части 6) могут не иметь новых полей.
   state.pointsCooldowns ??= {};
   state.suggestCooldowns ??= { users: {}, lastMs: null };
   state.joinQueue ??= [];
   state.joinQueueSinceMs ??= null;
-  const ctx = { state, config, rng, now, store };
+  state.autoNext ??= null;
+  state.autoNextArmed ??= false;
+  state.bossWaitNoticeMs ??= null;
+  const ctx = { state, config, rng, now, store, isLive };
   return {
     handleMessage: (event) => withPriority(handleMessage(ctx, event)),
     tick: () => withPriority(tick(ctx)),
@@ -76,11 +81,17 @@ function handleMessage(ctx, event) {
   const staff = roles.isBroadcaster || roles.isModerator;
   const { state, config, now } = ctx;
 
-  if (command === '!босс') return staff ? startLobby(ctx) : [];
+  if (command === '!босс') return staff ? boss(ctx) : [];
   if (command === '!стоп') {
-    if (!staff || (state.phase !== 'lobby' && state.phase !== 'running')) return [];
+    if (!staff) return [];
+    if (state.phase === 'ended' && state.autoNextArmed) {
+      state.autoNextArmed = false;
+      return [chat('⏸️ Следующий босс не появится сам. Новый бой — !босс', 'normal')];
+    }
+    if (state.phase !== 'lobby' && state.phase !== 'running') return [];
     return [...flushJoins(ctx), ...finishBattle(ctx, 'cancelled')];
   }
+  if (command === '!автобосс') return staff ? autoNextCommand(ctx, text) : [];
   if (command === '!join') return join(ctx, event); // текст после !join игнорируется
   if (command in ACTION_COMMANDS) {
     const player = state.registry.get(event.userId);
@@ -118,18 +129,60 @@ function suggest(ctx, event, text, staff) {
   return [chat(renderSuggestion(event.displayName ?? event.userId, full), 'low')];
 }
 
+// Сколько секунд осталось до конца паузы после боя (0 — можно начинать).
+function pauseLeftSeconds(ctx) {
+  const { state, config, now } = ctx;
+  if (state.phase !== 'ended') return 0;
+  return Math.max(0, config.BATTLE.pauseAfterBattleSeconds - (now() - state.endedAtMs) / 1000);
+}
+
+const autoNextEnabled = ({ state, config }) => state.autoNext ?? config.BATTLE.autoNextBoss === true;
+
+// !босс: во время паузы после боя — подсказка, сколько ждать; во время боя — молчание.
+function boss(ctx) {
+  const { state, config, now } = ctx;
+  const left = pauseLeftSeconds(ctx);
+  if (state.phase === 'ended' && left > 0) {
+    const last = state.bossWaitNoticeMs;
+    if (last != null && now() - last < config.BATTLE.bossWaitNoticeCooldownSeconds * 1000) return [];
+    state.bossWaitNoticeMs = now();
+    return [chat(renderBossWait(left), 'normal')];
+  }
+  return startLobby(ctx);
+}
+
+// !автобосс [вкл|выкл] — стример и модераторы. Без аргумента — показать, включён ли.
+function autoNextCommand(ctx, text) {
+  const { state, config } = ctx;
+  const arg = text.split(' ')[1];
+  if (['вкл', 'on', 'да'].includes(arg)) {
+    state.autoNext = true;
+  } else if (['выкл', 'off', 'нет'].includes(arg)) {
+    state.autoNext = false;
+    state.autoNextArmed = false;
+  }
+  return [chat(renderAutoNextStatus(autoNextEnabled(ctx), config.BATTLE.pauseAfterBattleSeconds), 'normal')];
+}
+
+// Конец боя: при победе или поражении во время стрима и включённом автобоссе следующий бой начнётся сам.
+function armAutoNext(ctx) {
+  const { state, config, isLive } = ctx;
+  state.autoNextArmed = autoNextEnabled(ctx) && state.result?.outcome !== 'cancelled' && isLive() === true;
+  return state.autoNextArmed ? [chat(renderAutoNextNotice(config.BATTLE.pauseAfterBattleSeconds), 'low')] : [];
+}
+
 function startLobby(ctx) {
   const { state, config, rng, now } = ctx;
-  const canStart = state.phase === 'idle'
-    || (state.phase === 'ended' && now() - state.endedAtMs >= config.BATTLE.pauseAfterBattleSeconds * 1000);
+  const canStart = state.phase === 'idle' || (state.phase === 'ended' && pauseLeftSeconds(ctx) === 0);
   if (!canStart) return [];
 
   // Реестр прошлого боя сбрасывается только здесь: часть 6 успевает прочитать result.
-  // Кулдауны !очки, !топ и подсказок переживают смену боя.
-  const { pointsCooldowns, suggestCooldowns } = state;
+  // Кулдауны !очки, !топ и подсказок и выбор автобосса переживают смену боя.
+  const { pointsCooldowns, suggestCooldowns, autoNext } = state;
   Object.assign(state, createInitialState());
   state.pointsCooldowns = pointsCooldowns;
   state.suggestCooldowns = suggestCooldowns;
+  state.autoNext = autoNext;
   state.battleId = `battle-${now()}-${rng(0, 999999)}`;
   state.boss = generateBoss(rng, config);
   state.phase = 'lobby';
@@ -209,8 +262,18 @@ function tick(ctx) {
     return messages;
   }
 
+  // Автобосс: пауза прошла — новый бой, если стрим всё ещё идёт (если закончился — ждём !босс).
+  if (state.phase === 'ended' && state.autoNextArmed && pauseLeftSeconds(ctx) === 0) {
+    state.autoNextArmed = false;
+    if (autoNextEnabled(ctx) && ctx.isLive() === true) messages.push(...startLobby(ctx));
+    return messages;
+  }
+
   // Просроченное окно (в том числе после перезапуска) разрешается на первом же tick.
-  if (state.phase === 'running' && t >= state.turnEndsAtMs) messages.push(...resolveTurn(ctx));
+  if (state.phase === 'running' && t >= state.turnEndsAtMs) {
+    messages.push(...resolveTurn(ctx));
+    if (state.phase === 'ended') messages.push(...armAutoNext(ctx));
+  }
   return messages;
 }
 
