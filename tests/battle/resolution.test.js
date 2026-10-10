@@ -108,7 +108,7 @@ test('Очищение: иммунитет к дебаффу босса и сн�
   b.say('m', '!навык');
   b.telegraph(SKILLS.armor);
   b.resolve();
-  assert.strictEqual(b.p('m').stats.damage - before, 100, 'Шар прошёл — заглушки нет');
+  assert.strictEqual(b.p('m').stats.damage - before, 90, 'Шар прошёл — заглушки нет');
 });
 
 test('Заглушка босса действует со следующего хода, карта «Проклятие» — с текущего', () => {
@@ -116,15 +116,15 @@ test('Заглушка босса действует со следующего �
   b.say('m', '!навык');
   b.telegraph(SKILLS.silence);
   b.resolve();
-  assert.strictEqual(dmg(b, 'm'), 100, 'в ходу заявки Шар ещё работает');
+  assert.strictEqual(dmg(b, 'm'), 90, 'в ходу заявки Шар ещё работает');
   b.say('m', '!навык');
   b.telegraph(SKILLS.single); // без брони босса, чтобы урон считался чисто
   b.resolve();
-  assert.strictEqual(dmg(b, 'm'), 100 + 42, 'следующий ход: заглушён, вместо Шара Искра');
+  assert.strictEqual(dmg(b, 'm'), 90 + 40, 'следующий ход: заглушён, вместо Шара Искра');
   b.say('m', '!навык');
   b.telegraph(SKILLS.single);
   b.resolve();
-  assert.strictEqual(dmg(b, 'm'), 142 + 100, 'через ход заглушка снята');
+  assert.strictEqual(dmg(b, 'm'), 130 + 90, 'через ход заглушка снята');
 
   const c = startBattle({ players: [['m', 'маг']] });
   c.giveHand(['curse', 'fury', 'fog']);
@@ -132,7 +132,7 @@ test('Заглушка босса действует со следующего �
   c.say('m', '!навык');
   c.telegraph(SKILLS.armor);
   c.resolve();
-  assert.strictEqual(dmg(c, 'm'), 42, 'Проклятие работает в этом же ходу');
+  assert.strictEqual(dmg(c, 'm'), 40, 'Проклятие работает в этом же ходу');
 });
 
 test('Метеор падает на шаге урона следующего хода и засчитывается магу', () => {
@@ -142,11 +142,11 @@ test('Метеор падает на шаге урона следующего х
   b.telegraph(SKILLS.armor);
   b.resolve();
   assert.strictEqual(dmg(b, 'm'), 0);
-  assert.deepStrictEqual(b.st.delayedHits.map((h) => [h.sourceId, h.amount, h.dueTurn]), [[b.id('m'), 147, 2]]);
+  assert.deepStrictEqual(b.st.delayedHits.map((h) => [h.sourceId, h.amount, h.dueTurn]), [[b.id('m'), 140, 2]]);
   b.telegraph(SKILLS.single);
   b.resolve();
-  // броня босса из хода 1 (×0.7) действует и на метеор: (147 + автоатака 32) × 0.7
-  assert.strictEqual(dmg(b, 'm'), Math.round(147 * 0.7) + Math.round(32 * 0.7));
+  // броня босса из хода 1 (×0.7) действует и на метеор: (140 + автоатака 30) × 0.7
+  assert.strictEqual(dmg(b, 'm'), Math.round(140 * 0.7) + Math.round(30 * 0.7));
   assert.deepStrictEqual(b.st.delayedHits, []);
 });
 

@@ -91,7 +91,8 @@ export function findMostWounded(registry, currentTurn, rng) {
 //   mode 'random'    — взвешенно-случайно среди всех
 //   mode 'topDamage' — самый большой stats.damage; при равенстве взвешенно-случайно
 // players — Map реестра или массив. turn не задан — активность не проверяется.
-export function pickSingleTarget(players, rng, { mode = 'random', turn = null } = {}) {
+// classWeights — множитель веса по классу ({ healer: 2 }), умножается на вес черт.
+export function pickSingleTarget(players, rng, { mode = 'random', turn = null, classWeights = {} } = {}) {
   let pool = [...(players instanceof Map ? players.values() : players)].filter((p) => isActive(p, turn));
   if (pool.length === 0) return null;
   if (mode === 'topDamage') {
@@ -101,7 +102,7 @@ export function pickSingleTarget(players, rng, { mode = 'random', turn = null } 
     throw new Error(`Unknown target mode: ${mode}`);
   }
   return pickWeighted(
-    pool.map((p) => ({ item: p, weight: p.mods?.bossTargetWeight ?? 1 })),
+    pool.map((p) => ({ item: p, weight: (p.mods?.bossTargetWeight ?? 1) * (classWeights[p.classId] ?? 1) })),
     rand01(rng),
   );
 }

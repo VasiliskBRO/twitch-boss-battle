@@ -14,7 +14,7 @@ import {
 import { rand01 } from '../src/rng.js';
 import { clip } from '../src/text.js';
 import { computeContribution, processBattleResult, renderAwardsSummary } from '../points/index.js';
-import { activeAlive, participants, buildResult } from './state.js';
+import { activeAlive, participants, buildResult, targetCount, singleSkillTargets } from './state.js';
 import {
   applyEffect, damageBoss, teamDamageMult, isSilenced, hasTeamEffect, classBaseDamage,
   applyBossDebuff, applyBossBuff, rollBossHitFraction, addSupport, fixedSupport,
@@ -59,6 +59,7 @@ export function startTurn(ctx) {
   state.turn += 1;
   state.turnLog = newTurnLog(state);
   state.bossBuffCancelled = false;
+  state.bossActionCancelled = false;
 
   for (const p of activeAlive(state)) regenMana(p, config);
 
@@ -130,38 +131,65 @@ function bossHit(ctx, target, fraction, baseMult, reductionMult, { taunted = fal
   return taken;
 }
 
+// Сколько целей у удара «в одного»: одна на каждые singleTargetPerPlayers живых бойцов.
+export function singleTargetCount(aliveCount, config) {
+  return targetCount(aliveCount, config.BATTLE.singleTargetPerPlayers);
+}
+
 function bossAttack(ctx, skill) {
   const { state, config, rng } = ctx;
   const boss = state.boss;
   const mult = getBossDamageMult(boss, config);
   let reduction = 1;
   for (const e of state.teamEffects) if (e.type === 'damageReduction') reduction *= 1 - e.pct;
-  const fraction = rollBossHitFraction(ctx, skill);
+  // Казнь бьёт фиксированной долей макс. HP цели; остальные удары — случайной из DAMAGE_VALUES.
+  const fraction = skill.execute ? config.BATTLE.executeHpPct : rollBossHitFraction(ctx, skill);
   const alive = activeAlive(state);
   if (alive.length === 0) return `«${skill.name}» не нашло целей`;
 
   if (skill.kind === 'single') {
+    const count = singleSkillTargets(skill, alive.length, config);
     const taunts = state.playerEffects
       .filter((e) => e.type === 'taunt')
       .map((e) => ({ e, p: state.registry.get(e.userId) }))
       .filter(({ p }) => p && p.status === 'alive');
-    let target;
-    let opts = {};
-    if (taunts.length > 0) {
-      const pick = taunts[rng(0, taunts.length - 1)];
-      target = pick.p;
-      opts = { taunted: true, tauntMult: pick.e.mult };
-    } else {
-      const mode = rand01(rng) < config.BATTLE.bossTopDamageChance ? 'topDamage' : 'random';
-      target = pickSingleTarget(alive, rng, { mode });
+    // Цели по очереди: сначала провокаторы (каждый принимает один удар), затем самый опасный
+    // (с шансом bossTopDamageChance) и случайные; один игрок — не больше одного удара.
+    const hits = [];
+    const taken = new Set();
+    const free = () => alive.filter((p) => !taken.has(p.userId));
+    const add = (p, opts = {}) => { taken.add(p.userId); hits.push({ p, opts }); };
+    for (const t of [...taunts].sort((a, b) => (a.p.userId < b.p.userId ? -1 : 1))) {
+      if (hits.length >= count) break;
+      if (taken.has(t.p.userId)) continue;
+      add(t.p, { taunted: true, tauntMult: t.e.mult });
     }
-    const taken = bossHit(ctx, target, fraction, mult, reduction, opts);
-    const via = opts.taunted ? ' (провокация)' : '';
-    return `«${skill.name}» по @${target.displayName}${via}: −${taken} HP`;
+    if (hits.length === 0 && taunts.length > 0) {
+      const pick = taunts[rng(0, taunts.length - 1)];
+      add(pick.p, { taunted: true, tauntMult: pick.e.mult });
+    }
+    while (hits.length < count && free().length > 0) {
+      const mode = rand01(rng) < config.BATTLE.bossTopDamageChance ? 'topDamage' : 'random';
+      add(pickSingleTarget(free(), rng, { mode, classWeights: config.BATTLE.bossTargetClassWeights }));
+    }
+    const results = hits.map(({ p, opts }) => ({ p, opts, hp: bossHit(ctx, p, fraction, mult, reduction, opts) }));
+    if (results.length === 1) {
+      const [{ p, opts, hp }] = results;
+      return `«${skill.name}» по @${p.displayName}${opts.taunted ? ' (провокация)' : ''}: −${hp} HP`;
+    }
+    const names = results.slice(0, 3).map(({ p, opts }) => `@${p.displayName}${opts.taunted ? ' (провокация)' : ''}`);
+    const more = results.length > 3 ? ` и ещё ${results.length - 3}` : '';
+    return `«${skill.name}» бьёт ${results.length} целей: ${names.join(', ')}${more}`;
   }
 
   for (const target of alive) bossHit(ctx, target, fraction, mult, reduction);
   return `«${skill.name}» задело ${alive.length} ${alive.length % 10 === 1 && alive.length % 100 !== 11 ? 'бойца' : 'бойцов'}`;
+}
+
+// Сколько урона за ход сбивает лечение босса (null — навык не лечение).
+export function healInterruptThreshold(boss, skill, config) {
+  if (skill?.effect !== 'heal') return null;
+  return Math.ceil(boss.maxHp * config.BOSS_HEAL_AI.interruptPct);
 }
 
 export function resolveTurn(ctx) {
@@ -209,9 +237,19 @@ export function resolveTurn(ctx) {
     if (a.d.kind === 'heal') {
       const target = findMostWounded(state.registry, state.turn, rng); // пересчёт перед каждым лечением
       if (target) healTarget(ctx, a.player, target, a.d.amount);
-    } else if (a.d.kind === 'healAll') {
-      for (const target of activeAlive(state)) healTarget(ctx, a.player, target, a.d.amount);
     }
+  }
+  // Молитвы не складываются: каждого лечит одна, самая сильная; вылеченное делится между молившимися.
+  const prayers = actions.filter((a) => a.d.kind === 'healAll');
+  if (prayers.length > 0) {
+    const amount = Math.max(...prayers.map((a) => a.d.amount));
+    const v = config.BATTLE.healVariance;
+    let restored = 0;
+    for (const target of activeAlive(state)) {
+      restored += healPlayer(target, Math.round(target.maxHp * amount * (1 - v + rand01(rng) * 2 * v)));
+    }
+    for (const a of prayers) a.player.stats.healing += restored / prayers.length;
+    log.healed += restored;
   }
   for (const a of actions) {
     for (const e of personal(a, (x) => x.type !== 'reviveAll' && !DAMAGE_EFFECTS.has(x.type))) {
@@ -265,7 +303,12 @@ export function resolveTurn(ctx) {
   // 6) Ответ босса.
   const skill = state.pendingTelegraph;
   if (!outcome && skill) {
-    if (state.bossBuffCancelled) {
+    const healThreshold = healInterruptThreshold(boss, skill, config);
+    if (state.bossActionCancelled) {
+      log.bossAction = `✋ Стример прервал «${skill.name}»`;
+    } else if (healThreshold !== null && log.chatDamage >= healThreshold) {
+      log.bossAction = `💢 Чат сбил лечение «${skill.name}»`;
+    } else if (state.bossBuffCancelled) {
       log.bossAction = `✋ Антимагия сорвала «${skill.name}»`;
       for (const id of log.cancelSources) fixedSupport(ctx, id, 'antimagic');
     } else if (skill.kind !== 'buff' && hasTeamEffect(state, 'shield')) {
@@ -340,6 +383,7 @@ function endOfTurn(ctx) {
   }
   tickTurn(state.streamer, now());
   state.bossBuffCancelled = false;
+  state.bossActionCancelled = false;
 }
 
 // ---------- Конец боя (раздел 8) ----------

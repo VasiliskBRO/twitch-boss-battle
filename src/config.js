@@ -15,8 +15,8 @@ export const CONFIG = {
     // HP = (baseHp + perPlayerHp × игроков^playerExponent) × hpMult архетипа × 0.9..1.1.
     // Степень > 1: большой отряд бьёт стабильнее (случайности усредняются), ему нужен запас HP.
     baseHp: 300,
-    perPlayerHp: 300,
-    playerExponent: 1.08,
+    perPlayerHp: 250,
+    playerExponent: 1.13,
   },
   SKILL_WEIGHTS: {
     single: 40,
@@ -24,6 +24,12 @@ export const CONFIG = {
     debuff: 20,
     buff: 15,
   },
+  // Лечение босса (навык с effect: 'heal' есть у каждого архетипа и всегда входит в его набор).
+  // Выше maxHpPct босс не лечится; ниже — вес лечения растёт линейно: при refHpPct он равен
+  // SKILL_WEIGHTS.single × refWeightMult (при 30% HP — в 3.5 раза чаще удара в одного).
+  // interruptPct: лечение срывается, если чат за этот ход снял боссу не меньше этой доли макс. HP
+  // (порог виден в заголовке хода — повод договориться и ударить навыками всем вместе).
+  BOSS_HEAL_AI: { maxHpPct: 0.8, refHpPct: 0.3, refWeightMult: 3.5, interruptPct: 0.12 },
   PHASE_THRESHOLDS: [0.66, 0.33],
   // Множитель урона босса по фазам 1, 2, 3 (см. getBossDamageMult).
   BOSS_PHASE_DAMAGE_MULT: [1.0, 1.1, 1.25],
@@ -88,8 +94,8 @@ export const CONFIG = {
       mana: 100,
       nativeDamageType: 'magic',
       skills: {
-        attack: { name: 'Искра', manaCost: 0, power: 42 },
-        skill: { name: 'Шар', manaCost: 40, power: 100 },
+        attack: { name: 'Искра', manaCost: 0, power: 40 },
+        skill: { name: 'Шар', manaCost: 40, power: 90 },
       },
     },
     healer: {
@@ -137,6 +143,17 @@ export const CONFIG = {
     autoNextBoss: true,
     bossWaitNoticeCooldownSeconds: 10, // «⏳ Следующий босс через …» на ранний !босс — не чаще
     bossTopDamageChance: 0.25, // доля одиночных атак босса по самому опасному игроку
+    // Удар «в одного» в большом отряде бьёт по нескольким: одна цель на каждые singleTargetPerPlayers
+    // живых бойцов (5–19 → 1 цель, 30 → 3, 100 → 10). Иначе при 100 игроках удар почти никого не задевает.
+    singleTargetPerPlayers: 10,
+    // «Казнь» (навык с execute: true, у каждого босса со 2-й фазы): удар на executeHpPct макс. HP цели × множители
+    // босса — валит и бойца с полным HP. Целей — одна на каждые executeTargetPerPlayers живых (минимум одна).
+    // Отбивается провокацией воина (урон ×0.5), Щитом и «Прервать» стримера, Магическим барьером.
+    executeTargetPerPlayers: 6,
+    executeHpPct: 1.0,
+    executeWeightMult: 3, // со 2-й фазы босс выбирает казнь втрое охотнее удара в одного
+    // Вес класса при выборе случайной цели босса (умножается на вес черт): хиллер — желанная цель.
+    bossTargetClassWeights: { healer: 2 },
     maxNamesInSummary: 5,
     healVariance: 0.15, // разброс лечения ±15%
     // Ответ на !join: auto и batch — сводка вступивших раз в joinBatchSeconds;
@@ -182,7 +199,7 @@ export const CONFIG = {
     guideCooldownSeconds: 60, // общий кулдаун на весь чат
     // Публичное приложение автора игры (Client Type: Public): стримеры входят по коду (setup.js)
     // без своей консоли разработчика. Client ID — не секрет. Своё приложение — TWITCH_CLIENT_ID в .env.
-    publicClientId: null, // TODO: вписать Client ID после регистрации приложения
+    publicClientId: 'k34jop1u9498qezk1qrs3l4vbfuqww',
     authPort: 3000, // для старого способа auth.js: redirect URI http://localhost:3000/callback
     // Скоупы по документации Твича (EventSub channel.chat.message + Send Chat Message API).
     scopes: ['user:read:chat', 'user:write:chat', 'user:read:moderated_channels'],
@@ -203,10 +220,11 @@ export const CONFIG = {
     silence_class: { turns: 1 },
   },
   // Цели баланса для simulate.js: доля побед по сценариям.
+  // Активный чат должен чаще побеждать, молчаливый — чаще проигрывать, при любом размере отряда.
   SIM_TARGETS: {
-    engaged: { min: 0.60, max: 0.75 },
-    lurkers: { min: 0.35, max: 0.55 },
-    mixed: { min: 0.45, max: 0.65 },
+    engaged: { min: 0.55, max: 0.70 },
+    lurkers: { min: 0.10, max: 0.25 },
+    mixed: { min: 0.35, max: 0.50 },
   },
   // ===== Часть 6: очки, рейтинг и звания =====
   POINTS: {
@@ -267,6 +285,8 @@ export const CONFIG = {
         { id: 'beast_claw', name: 'Раздирающий удар', kind: 'single', power: 1.1, cooldown: 2, unlockPhase: 1, announceText: 'Босс наносит мощный удар когтями!' },
         { id: 'beast_frenzy', name: 'Кровавое безумие', kind: 'buff', effect: 'dmg_up', power: 0.2, cooldown: 5, unlockPhase: 2, announceText: 'Босс впадает в ярость!' },
         { id: 'beast_pounce', name: 'Смертельный прыжок', kind: 'single', power: 1.3, cooldown: 4, unlockPhase: 2, announceText: 'Босс обрушивается на цель сверху!' },
+        { id: 'beast_lick', name: 'Зализать раны', kind: 'buff', effect: 'heal', power: 0.08, cooldown: 4, unlockPhase: 2, announceText: 'Босс отступает и зализывает раны!' },
+        { id: 'beast_exec', name: 'Смертельная хватка', kind: 'single', execute: true, power: 1, cooldown: 4, unlockPhase: 2, announceText: 'Босс выбирает жертву!' },
         { id: 'beast_stampede', name: 'Топотуха', kind: 'aoe', power: 0.9, cooldown: 3, unlockPhase: 1, announceText: 'Босс врывается в толпу!' },
       ],
     },
@@ -292,7 +312,8 @@ export const CONFIG = {
         { id: 'undead_drain', name: 'Похищение жизни', kind: 'single', power: 1.0, cooldown: 3, unlockPhase: 1, announceText: 'Босс вытягивает жизненную силу!' },
         { id: 'undead_miasma', name: 'Гнилое облако', kind: 'aoe', power: 1.0, cooldown: 3, unlockPhase: 1, announceText: 'Босс выпускает ядовитый туман!' },
         { id: 'undead_curse', name: 'Проклятие смерти', kind: 'debuff', effect: 'weaken', power: 1.0, cooldown: 4, unlockPhase: 1, announceText: 'Босс накладывает проклятие!' },
-        { id: 'undead_rise', name: 'Поднятие павших', kind: 'buff', effect: 'heal', power: 0.1, cooldown: 5, unlockPhase: 2, announceText: 'Босс черпает силы из смерти!' },
+        { id: 'undead_rise', name: 'Поднятие павших', kind: 'buff', effect: 'heal', power: 0.08, cooldown: 4, unlockPhase: 2, announceText: 'Босс черпает силы из смерти!' },
+        { id: 'undead_exec', name: 'Касание смерти', kind: 'single', execute: true, power: 1, cooldown: 4, unlockPhase: 2, announceText: 'Холодная рука тянется к живым!' },
         { id: 'undead_chill', name: 'Ледяной шепот', kind: 'single', power: 1.1, cooldown: 2, unlockPhase: 1, announceText: 'Босс шепчет слова смерти!' },
         { id: 'undead_grave', name: 'Хватка могилы', kind: 'single', power: 1.2, cooldown: 3, unlockPhase: 2, announceText: 'Костлявые руки тянутся из земли!' },
       ],
@@ -321,6 +342,8 @@ export const CONFIG = {
         { id: 'demon_fear', name: 'Взор ужаса', kind: 'debuff', effect: 'silence_class', power: 1.0, cooldown: 4, unlockPhase: 1, announceText: 'Босс заставляет игроков дрожать от страха!' },
         { id: 'demon_shield', name: 'Демонический щит', kind: 'buff', effect: 'armor', power: 1.0, cooldown: 5, unlockPhase: 2, announceText: 'Босс окутывает себя темной энергией!' },
         { id: 'demon_burn', name: 'Испепеление', kind: 'single', power: 1.4, cooldown: 3, unlockPhase: 2, announceText: 'Босс сжигает цель заживо!' },
+        { id: 'demon_feast', name: 'Пир душ', kind: 'buff', effect: 'heal', power: 0.08, cooldown: 4, unlockPhase: 2, announceText: 'Босс пожирает души и восстанавливает силы!' },
+        { id: 'demon_exec', name: 'Приговор Бездны', kind: 'single', execute: true, power: 1, cooldown: 4, unlockPhase: 2, announceText: 'Бездна выносит приговор!' },
         { id: 'demon_chaos', name: 'Хаотический разряд', kind: 'aoe', power: 0.8, cooldown: 2, unlockPhase: 1, announceText: 'Босс выпускает разряды хаоса!' },
       ],
     },
@@ -348,6 +371,8 @@ export const CONFIG = {
         { id: 'golem_harden', name: 'Укрепление', kind: 'buff', effect: 'armor', power: 1.0, cooldown: 5, unlockPhase: 1, announceText: 'Босс уплотняет свою структуру!' },
         { id: 'golem_throw', name: 'Бросок глыбы', kind: 'single', power: 1.2, cooldown: 3, unlockPhase: 2, announceText: 'Босс швыряет огромный камень в цель!' },
         { id: 'golem_stomp', name: 'Сокрушающий топот', kind: 'aoe', power: 0.9, cooldown: 3, unlockPhase: 2, announceText: 'Босс раздавливает всё вокруг!' },
+        { id: 'golem_mend', name: 'Восстановление камня', kind: 'buff', effect: 'heal', power: 0.08, cooldown: 4, unlockPhase: 2, announceText: 'Трещины на боссе затягиваются камнем!' },
+        { id: 'golem_exec', name: 'Раздавить', kind: 'single', execute: true, power: 1, cooldown: 4, unlockPhase: 2, announceText: 'Босс заносит огромный кулак!' },
         { id: 'golem_slow', name: 'Каменные оковы', kind: 'debuff', effect: 'weaken', power: 1.0, cooldown: 4, unlockPhase: 1, announceText: 'Босс замедляет движения игроков!' },
       ],
     },
@@ -375,6 +400,8 @@ export const CONFIG = {
         { id: 'elem_shift', name: 'Смена формы', kind: 'buff', effect: 'armor', power: 1.0, cooldown: 5, unlockPhase: 1, announceText: 'Босс меняет свою плотность!' },
         { id: 'elem_storm', name: 'Великий шторм', kind: 'aoe', power: 1.2, cooldown: 4, unlockPhase: 2, announceText: 'Босс создает вокруг себя настоящий шторм!' },
         { id: 'elem_drain', name: 'Поглощение магии', kind: 'debuff', effect: 'silence_class', power: 1.0, cooldown: 4, unlockPhase: 2, announceText: 'Босс высасывает энергию из игроков!' },
+        { id: 'elem_feed', name: 'Подпитка стихией', kind: 'buff', effect: 'heal', power: 0.08, cooldown: 4, unlockPhase: 2, announceText: 'Босс впитывает энергию стихий!' },
+        { id: 'elem_exec', name: 'Распад', kind: 'single', execute: true, power: 1, cooldown: 4, unlockPhase: 2, announceText: 'Энергия босса разрывает материю!' },
         { id: 'elem_pulse', name: 'Энергетический импульс', kind: 'aoe', power: 0.8, cooldown: 2, unlockPhase: 1, announceText: 'Босс испускает волну энергии!' },
       ],
     },
@@ -402,6 +429,8 @@ export const CONFIG = {
         { id: 'drag_tail', name: 'Удар хвостом', kind: 'aoe', power: 0.9, cooldown: 3, unlockPhase: 1, announceText: 'Босс сносит всех мощным ударом хвоста!' },
         { id: 'drag_roar', name: 'Глас Тирана', kind: 'debuff', effect: 'weaken', power: 1.0, cooldown: 4, unlockPhase: 2, announceText: 'Босс издает рев, подавляющий волю!' },
         { id: 'drag_scale', name: 'Алмазная чешуя', kind: 'buff', effect: 'armor', power: 1.0, cooldown: 5, unlockPhase: 2, announceText: 'Босс напрягает свою несокрушимую чешую!' },
+        { id: 'drag_regen', name: 'Драконья регенерация', kind: 'buff', effect: 'heal', power: 0.08, cooldown: 4, unlockPhase: 2, announceText: 'Чешуя босса нарастает заново!' },
+        { id: 'drag_exec', name: 'Испепеляющий взгляд', kind: 'single', execute: true, power: 1, cooldown: 4, unlockPhase: 2, announceText: 'Глаза дракона вспыхивают!' },
         { id: 'drag_claw', name: 'Раздирающий коготь', kind: 'single', power: 1.3, cooldown: 3, unlockPhase: 1, announceText: 'Босс наносит глубокую рану!' },
       ],
     },

@@ -23,6 +23,7 @@ export function createInitialState() {
     queuedMomentCard: null, // cardId карты из «момента стримера», применяется в начале следующего хода
     pendingTelegraph: null, // навык босса, заявленный на этот ход
     bossBuffCancelled: false, // Антимагия отменила бафф этого хода
+    bossActionCancelled: false, // карта «Прервать» отменила действие босса в этом ходу
     lobbyStartedAtMs: null,
     lobbyEndsAtMs: null,
     lastLobbyProgressMs: null,
@@ -65,6 +66,17 @@ export function participants(state) {
 }
 
 // Живые активные игроки по возрастанию userId.
+// Целей у удара по нескольким: одна на каждые perPlayers живых (минимум одна).
+export function targetCount(aliveCount, perPlayers) {
+  return Math.max(1, Math.floor(aliveCount / (perPlayers ?? Infinity)));
+}
+
+// Сколько целей у навыка «в одного» (обычный удар или казнь) при aliveCount живых.
+export function singleSkillTargets(skill, aliveCount, config) {
+  const per = skill?.execute ? config.BATTLE.executeTargetPerPlayers : config.BATTLE.singleTargetPerPlayers;
+  return targetCount(aliveCount, per);
+}
+
 export function activeAlive(state) {
   return participants(state).filter((p) => p.status === 'alive');
 }

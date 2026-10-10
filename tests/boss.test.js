@@ -6,6 +6,7 @@ import {
   finalizeHp,
   applyDamage,
   pickTelegraph,
+  healWeight,
   toJSON,
   fromJSON,
   tickStatuses,
@@ -29,7 +30,9 @@ test('Boss Generation: Constraints', () => {
     const boss = generateBoss(mockRng);
     assert.ok(boss.name.length > 0, 'Name should not be empty');
     assert.notStrictEqual(boss.weakness, boss.resistance, 'Weakness should not be same as resistance');
-    assert.strictEqual(boss.skills.length, 4, 'Should have 4 skills');
+    assert.strictEqual(boss.skills.length, 6, 'Should have 6 skills (4 + лечение + казнь)');
+    assert.strictEqual(boss.skills[4].effect, 'heal', 'лечение всегда пятым');
+    assert.strictEqual(boss.skills[5].execute, true, 'казнь всегда шестой');
 
     const hasSingle = boss.skills.some(s => s.kind === 'single');
     const hasAoe = boss.skills.some(s => s.kind === 'aoe');
@@ -104,11 +107,12 @@ test('Phases: один сильный удар проходит нескольк
   }
 });
 
-test('Boss Generation: 4 разных навыка, последний — фазы 2+, если такой остался', () => {
+test('Boss Generation: 4 разных навыка без лечения и казни, четвёртый — фазы 2+, если такой остался; затем лечение и казнь', () => {
   for (let i = 0; i < 2000; i++) {
     const boss = generateBoss(mockRng);
-    assert.strictEqual(new Set(boss.skills.map(s => s.id)).size, 4, boss.skills.map(s => s.id).join(','));
-    const pool = CONFIG.ARCHETYPES[boss.archetype].skillPool;
+    assert.strictEqual(new Set(boss.skills.map(s => s.id)).size, 6, boss.skills.map(s => s.id).join(','));
+    assert.ok(boss.skills.slice(0, 4).every(s => s.effect !== 'heal' && !s.execute));
+    const pool = CONFIG.ARCHETYPES[boss.archetype].skillPool.filter(s => s.effect !== 'heal' && !s.execute);
     const phase2Left = pool.some(s => s.unlockPhase >= 2 && !boss.skills.slice(0, 3).some(p => p.id === s.id));
     if (phase2Left) assert.ok(boss.skills[3].unlockPhase >= 2);
   }
@@ -124,6 +128,8 @@ test('finalizeHp: одинаковый rng → одинаковое HP', () => {
 
 test('pickTelegraph: откаты спадают через tickBossCooldowns, навык недоступен ровно cooldown ходов', () => {
   const boss = generateBoss(mockRng);
+  finalizeHp(boss, 5, mockRng);
+  boss.hp = Math.round(boss.maxHp * 0.3); // при почти полном HP лечение не выбирается
   boss.currentPhase = 3;
   const used = pickTelegraph(boss, mockRng);
   for (let t = 1; t <= used.cooldown; t++) {
@@ -282,4 +288,62 @@ test('Статусы с одним id не перемножаются (дейс�
   addStatus(boss, { id: 'armor', turnsLeft: 2, damageTakenMult: 0.7 });
   addStatus(boss, { id: 'armor', turnsLeft: 2, damageTakenMult: 0.7 });
   assert.ok(Math.abs(boss.damageTakenMult - 1.3 * 0.7) < 1e-9, `${boss.damageTakenMult}`);
+});
+
+test('Лечение босса: выше 80% HP не выбирается, ниже — тем чаще, чем меньше HP', () => {
+  const boss = generateBoss(makeRng(3));
+  finalizeHp(boss, 5, makeRng(3));
+  boss.currentPhase = 3;
+  const healId = boss.skills.find(s => s.effect === 'heal').id;
+  const share = (hpPct) => {
+    const rng = makeRng(11);
+    let heals = 0;
+    for (let i = 0; i < 4000; i++) {
+      boss.hp = Math.round(boss.maxHp * hpPct);
+      boss.cooldowns = {};
+      boss.lastSkillId = null;
+      if (pickTelegraph(boss, rng).id === healId) heals++;
+    }
+    return heals / 4000;
+  };
+  assert.strictEqual(share(0.9), 0);
+  assert.strictEqual(share(0.81), 0);
+  const [h60, h30, h10] = [share(0.6), share(0.3), share(0.1)];
+  assert.ok(h60 > 0 && h60 < h30 && h30 < h10, `${h60} ${h30} ${h10}`);
+  assert.ok(Math.abs(healWeight(boss) - CONFIG.SKILL_WEIGHTS.single * 3.5 * (0.8 - boss.hp / boss.maxHp) / 0.5) < 1e-9);
+  boss.hp = Math.round(boss.maxHp * 0.3);
+  assert.ok(Math.abs(healWeight(boss) / CONFIG.SKILL_WEIGHTS.single - 3.5) < 0.01, 'при 30% HP — в 3.5 раза чаще удара');
+
+  // В фазе 1 (HP > 66%) лечения нет: навык открывается со 2-й фазы.
+  boss.currentPhase = 1;
+  boss.hp = Math.round(boss.maxHp * 0.7);
+  boss.cooldowns = {};
+  for (let i = 0; i < 200; i++) assert.notStrictEqual(pickTelegraph(boss, makeRng(i)).id, healId);
+});
+
+test('Лечение и казнь есть у каждого архетипа (по одной)', () => {
+  for (const [id, a] of Object.entries(CONFIG.ARCHETYPES)) {
+    assert.strictEqual(a.skillPool.filter(s => s.effect === 'heal').length, 1, id);
+    assert.strictEqual(a.skillPool.filter(s => s.execute).length, 1, id);
+  }
+});
+
+test('Казнь: не раньше 2-й фазы; со 2-й фазы — заметно чаще удара в одного', () => {
+  const boss = generateBoss(makeRng(4));
+  finalizeHp(boss, 5, makeRng(4));
+  boss.hp = boss.maxHp; // лечение не выбирается
+  const exec = boss.skills.find(s => s.execute);
+  const count = (phase) => {
+    const rng = makeRng(9);
+    let n = 0;
+    for (let i = 0; i < 3000; i++) {
+      boss.currentPhase = phase;
+      boss.cooldowns = {};
+      boss.lastSkillId = null;
+      if (pickTelegraph(boss, rng).id === exec.id) n++;
+    }
+    return n / 3000;
+  };
+  assert.strictEqual(count(1), 0);
+  assert.ok(count(2) > 0.3, `${count(2)}`);
 });

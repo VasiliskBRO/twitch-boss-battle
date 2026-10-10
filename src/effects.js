@@ -29,6 +29,7 @@ export const EFFECT_TYPES = {
 
   // Часть 4: карты стримера.
   blockNextBossAttack: {},
+  cancelBossAction: {},
   healAll: { pctMaxHp: 'pct' },
   restoreManaAll: { pctMax: 'pct' },
   trueDamageBoss: { pctMaxHp: 'pct', canKill: 'false' },

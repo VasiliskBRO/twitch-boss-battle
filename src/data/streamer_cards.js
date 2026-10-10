@@ -41,6 +41,12 @@ export const STREAMER_CARD_CATALOG = [
     short: 'всем +{0.pctMax|pct} маны',
   },
   {
+    id: 'interrupt', name: 'Прервать', emoji: '✋', kind: 'help',
+    effects: [{ type: 'cancelBossAction' }],
+    announceText: 'Босс сбит с толку: его действие в этом ходу отменяется (удар, бафф или лечение).',
+    short: 'отменить действие босса',
+  },
+  {
     id: 'streamer_strike', name: 'Удар стримера', emoji: '🎯', kind: 'help',
     effects: [{ type: 'trueDamageBoss', pctMaxHp: 0.05, canKill: false }],
     announceText: 'Босс теряет {0.pctMaxHp|pct} макс. HP чистым уроном.',

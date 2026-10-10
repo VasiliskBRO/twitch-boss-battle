@@ -2,7 +2,7 @@
 
 import { renderHpBar, renderPlayerStatus } from '../src/renderer.js';
 import { clip, plural } from '../src/text.js';
-import { contribution } from './state.js';
+import { contribution, activeAlive, singleSkillTargets } from './state.js';
 
 const MAX = 500;
 const PLAYER_FORMS = ['боец', 'бойца', 'бойцов'];
@@ -76,7 +76,14 @@ export function renderBossHp(boss) {
 // «⚔️ Ход 3/15 | 🐉 Ржавый Дракон Бездны [██████░░░░] 7200/12000 | ⚠️ Готовит «Огненное дыхание» по всем! | !атака !навык !особый (40 с)»
 export function renderTurnHeader(state, config) {
   const { boss, pendingTelegraph: skill } = state;
-  const threat = skill ? `⚠️ Готовит «${skill.name}» ${TARGET_TEXT[skill.kind] ?? ''}`.trim() : '⚠️ Босс медлит';
+  let threat = skill ? `⚠️ Готовит «${skill.name}» ${TARGET_TEXT[skill.kind] ?? ''}`.trim() : '⚠️ Босс медлит';
+  if (skill?.execute) {
+    const n = singleSkillTargets(skill, activeAlive(state).length, config);
+    threat = `☠️ Готовит «${skill.name}» — смертельный удар по ${n} ${n === 1 ? 'бойцу' : 'бойцам'}! Воины, !навык — провокация примет удар`;
+  }
+  if (skill?.effect === 'heal') {
+    threat = `💚 Готовит лечение «${skill.name}»! Собьёте, если нанесёте ${Math.ceil(boss.maxHp * config.BOSS_HEAL_AI.interruptPct)}+ урона за ход`;
+  }
   return clip(
     `⚔️ Ход ${state.turn}/${config.BATTLE.maxTurns} | ${boss.emoji} ${boss.name} ${renderHpBar(boss)} | ${threat} | !атака !навык !особый (${state.turn === 1 ? config.BATTLE.firstTurnWindowSeconds ?? config.BATTLE.turnWindowSeconds : config.BATTLE.turnWindowSeconds} с)`,
     MAX,

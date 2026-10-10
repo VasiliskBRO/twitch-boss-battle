@@ -152,6 +152,9 @@ export function applyEffect(ctx, effect, { sourceId = null } = {}) {
     case 'removeBossStatus':
       if (removeStatus(boss, effect.id) > 0) fixedSupport(ctx, sourceId, 'antimagic');
       return;
+    case 'cancelBossAction':
+      state.bossActionCancelled = true;
+      return;
     case 'cancelBossBuff':
       if (state.pendingTelegraph?.kind === 'buff') {
         state.bossBuffCancelled = true;
@@ -237,7 +240,7 @@ export function applyBossBuff(ctx, skill) {
   }
   if (skill.effect === 'heal') {
     const before = boss.hp;
-    healBoss(boss, Math.round(boss.maxHp * fx.pctMaxHp));
+    healBoss(boss, Math.round(boss.maxHp * (skill.power ?? fx.pctMaxHp)));
     return `«${skill.name}»: босс лечится +${boss.hp - before}`;
   }
   if (skill.effect === 'dmg_up') {

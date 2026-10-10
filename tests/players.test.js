@@ -80,11 +80,11 @@ test('Меткий выстрел: всегда крит ×2, итого 90 ±15
   }
 });
 
-test('Маг: Шар (100), Воин: Провокация', () => {
+test('Маг: Шар (90), Воин: Провокация', () => {
   const rng = makeRng(4);
   const mage = plain('mage');
   const a = rollAction(mage, 'навык', rng);
-  const base = a.crit ? 100 * 1.5 : 100;
+  const base = a.crit ? 90 * 1.5 : 90;
   assert.ok(a.amount >= Math.round(base * 0.85) && a.amount <= Math.round(base * 1.15));
   assert.strictEqual(a.manaCost, 40);
 

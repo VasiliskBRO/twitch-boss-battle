@@ -24,8 +24,9 @@ export function generateBoss(rng, config = CONFIG) {
     resistance = resistances[rng(0, resistances.length - 1)];
   } while (weakness === resistance);
 
-  // Skills selection
-  const pool = archetype.skillPool;
+  // Skills selection: 4 навыка из пула (без лечения и казни) + лечение пятым + казнь шестой.
+  const isHeal = (s) => s.effect === 'heal';
+  const pool = archetype.skillPool.filter(s => !isHeal(s) && !s.execute);
   const skills = [];
 
   const getSkillByKind = (kind) => {
@@ -48,6 +49,13 @@ export function generateBoss(rng, config = CONFIG) {
   const phase2Pool = pool.filter(s => s.unlockPhase >= 2 && notPicked(s));
   const lastPool = phase2Pool.length > 0 ? phase2Pool : pool.filter(notPicked);
   skills.push(lastPool[rng(0, lastPool.length - 1)]);
+
+  // 5. Лечение (со 2-й фазы; когда его выбирать — см. healWeight)
+  const healSkill = archetype.skillPool.find(isHeal);
+  if (healSkill) skills.push(healSkill);
+  // 6. Казнь (со 2-й фазы)
+  const executeSkill = archetype.skillPool.find(s => s.execute);
+  if (executeSkill) skills.push(executeSkill);
 
   return {
     id: `boss_${Date.now()}_${rng(0, 1000)}`,
@@ -192,18 +200,38 @@ export function getBossDamageMult(boss, config = CONFIG) {
   return archetype * phase * boss.damageDealtMult;
 }
 
+// Вес лечения: 0 выше BOSS_HEAL_AI.maxHpPct HP, ниже — растёт линейно по мере потери HP.
+export function healWeight(boss, config = CONFIG) {
+  const { maxHpPct, refHpPct, refWeightMult } = config.BOSS_HEAL_AI;
+  const hpPct = boss.maxHp > 0 ? boss.hp / boss.maxHp : 1;
+  if (hpPct > maxHpPct) return 0;
+  return config.SKILL_WEIGHTS.single * refWeightMult * (maxHpPct - hpPct) / (maxHpPct - refHpPct);
+}
+
 export function pickTelegraph(boss, rng, config = CONFIG) {
+  const heal = healWeight(boss, config);
+  // Лечиться при почти полном HP бессмысленно — такой навык не выбирается вовсе.
+  const usable = (s) => s.effect !== 'heal' || heal > 0;
   const availableSkills = boss.skills.filter(s => {
     const cooldown = boss.cooldowns[s.id] || 0;
     const isUnlocked = s.unlockPhase <= boss.currentPhase;
     const notLast = s.id !== boss.lastSkillId;
-    return cooldown === 0 && isUnlocked && notLast;
+    return cooldown === 0 && isUnlocked && notLast && usable(s);
   });
+
+  // Лечение — по HP босса; казнь — вес удара в одного × BATTLE.executeWeightMult (босс часто её выбирает).
+  const weights = config.SKILL_WEIGHTS;
+  const skillWeight = (s) => {
+    if (s.effect === 'heal') return heal;
+    if (s.execute) return (weights.single ?? 10) * (config.BATTLE.executeWeightMult ?? 1);
+    return weights[s.kind] || 10;
+  };
 
   let skill;
   if (availableSkills.length === 0) {
     // Всё на откате: берём разблокированный навык с наименьшим откатом, по возможности не повтор.
-    const unlocked = boss.skills.filter(s => s.unlockPhase <= boss.currentPhase);
+    const unlockedAll = boss.skills.filter(s => s.unlockPhase <= boss.currentPhase);
+    const unlocked = unlockedAll.some(usable) ? unlockedAll.filter(usable) : unlockedAll;
     const notLast = unlocked.filter(s => s.id !== boss.lastSkillId);
     const pool = notLast.length > 0 ? notLast : unlocked;
     const minCd = Math.min(...pool.map(s => boss.cooldowns[s.id] || 0));
@@ -211,9 +239,8 @@ export function pickTelegraph(boss, rng, config = CONFIG) {
     skill = soonest[rng(0, soonest.length - 1)];
   } else {
     // Weighted selection
-    const weights = config.SKILL_WEIGHTS;
     skill = pickWeighted(
-      availableSkills.map(s => ({ item: s, weight: weights[s.kind] || 10 })),
+      availableSkills.map(s => ({ item: s, weight: skillWeight(s) })),
       rand01(rng),
     );
   }

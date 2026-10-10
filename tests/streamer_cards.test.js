@@ -30,7 +30,7 @@ test('Рука: 3 разные карты, минимум 1 помощь и 1 п
     assert.ok(kinds(s).includes('help') && kinds(s).includes('hinder'), s.hand.join(','));
     for (const id of s.hand) counts[id] = (counts[id] || 0) + 1;
   }
-  assert.strictEqual(Object.keys(counts).length, 12, 'в раздачах встречаются все карты');
+  assert.strictEqual(Object.keys(counts).length, 13, 'в раздачах встречаются все карты');
 });
 
 test('Рука: раздача детерминирована при одном seed', () => {
@@ -273,10 +273,10 @@ test('Добор: после двух фаз в руке на 2 карты бо�
   }
 });
 
-test('Дескрипторы 12 карт валидны по EFFECT_TYPES; числа берутся из конфига', () => {
+test('Дескрипторы 13 карт валидны по EFFECT_TYPES; числа берутся из конфига', () => {
   const deck = createDeck();
-  assert.strictEqual(deck.length, 12);
-  assert.strictEqual(deck.filter((c) => c.kind === 'help').length, 6);
+  assert.strictEqual(deck.length, 13);
+  assert.strictEqual(deck.filter((c) => c.kind === 'help').length, 7);
   assert.strictEqual(deck.filter((c) => c.kind === 'hinder').length, 6);
   for (const card of deck) {
     assert.deepStrictEqual(Object.keys(card).sort(), ['announceText', 'effects', 'emoji', 'id', 'kind', 'name']);
