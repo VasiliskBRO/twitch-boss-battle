@@ -1,29 +1,19 @@
 // Демо хранилища очков: 20 симулированных боёв подряд с одним файловым хранилищем,
 // затем вывод !очки и !топ. Файл: data/points.sample.json (+ .bak).
 //
-//   node demo_points.js
+//   node tools/demo_points.js
 
 import fs from 'node:fs';
-import { CONFIG } from './src/config.js';
-import { createBattleEngine } from './battle/engine.js';
-import { createFileStore, topTitle } from './points/index.js';
+import { CONFIG } from '../src/config.js';
+import { makeRng } from '../src/rng.js';
+import { createBattleEngine } from '../battle/engine.js';
+import { createFileStore, topTitle } from '../points/index.js';
 
 const FILE = 'data/points.sample.json';
 const BATTLES = 20;
 const VIEWERS = ['Ворон', 'Ёжик_TV', 'NightOwl', 'кот_учёный', 'Strelok', 'Магистр', 'ДобрыйДоктор', 'paladin_77',
   'Лиса', 'xXx_Pro_xXx', 'бабушка_Зина', 'Тихоня', 'Gromila', 'Шаман', 'PixelKnight', 'Чай_с_мятой',
   'Nightbot', 'Кузя', 'Mr_Bean', 'Снежок', 'Барон', 'Ночная_смена', 'Тапок', 'Дед_Мороз'];
-
-function makeRng(seed) {
-  let a = seed >>> 0;
-  return (min, max) => {
-    a = (a + 0x6d2b79f5) >>> 0;
-    let t = a;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return min + Math.floor((((t ^ (t >>> 14)) >>> 0) / 4294967296) * (max - min + 1));
-  };
-}
 
 fs.mkdirSync('data', { recursive: true });
 for (const f of [FILE, `${FILE}.bak`]) if (fs.existsSync(f)) fs.rmSync(f);

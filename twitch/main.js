@@ -11,7 +11,8 @@ import { createFileStore } from '../points/index.js';
 import { createBot } from './bot.js';
 import { FakeAdapter } from './fake_adapter.js';
 import { createLogger } from './logger.js';
-import { runLoadTest, formatLoadTest, makeRng } from './loadtest.js';
+import { runLoadTest, formatLoadTest } from './loadtest.js';
+import { makeRng } from '../src/rng.js';
 import { parseConsoleLine } from './console_input.js';
 
 const args = process.argv.slice(2);

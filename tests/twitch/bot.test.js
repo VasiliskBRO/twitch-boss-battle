@@ -6,7 +6,8 @@ import path from 'node:path';
 import { CONFIG } from '../../src/config.js';
 import { createBot } from '../../twitch/bot.js';
 import { FakeAdapter } from '../../twitch/fake_adapter.js';
-import { runLoadTest, maxInWindow, makeRng } from '../../twitch/loadtest.js';
+import { runLoadTest, maxInWindow } from '../../twitch/loadtest.js';
+import { makeRng } from '../../src/rng.js';
 
 const T = CONFIG.TWITCH;
 const STREAMER = { broadcaster: '1' };

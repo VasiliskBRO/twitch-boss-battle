@@ -1,16 +1,17 @@
 #!/usr/bin/env node
 // Симулятор боёв без Твича: прогоняет полные бои через createBattleEngine с фейковыми часами.
 //
-//   node simulate.js --players 5,10,30,100 --battles 500 --seed 1 --scenario engaged --streamer random
+//   node tools/simulate.js --players 5,10,30,100 --battles 500 --seed 1 --scenario engaged --streamer random
 //
 // --scenario: engaged (60% игроков шлют явную команду за ход) | lurkers (15%) | mixed (35%);
 //             можно списком: engaged,lurkers,mixed.
 // --streamer: none | random (в каждый разрешённый ход и в окне момента играет случайную карту с вероятностью 0.5).
 
-import { CONFIG } from './src/config.js';
-import { createBattleEngine } from './battle/engine.js';
-import { canPlay } from './src/streamer_cards.js';
-import { computeAwards, participantsOf } from './points/index.js';
+import { CONFIG } from '../src/config.js';
+import { makeRng } from '../src/rng.js';
+import { createBattleEngine } from '../battle/engine.js';
+import { canPlay } from '../src/streamer_cards.js';
+import { computeAwards, participantsOf } from '../points/index.js';
 
 const SCENARIOS = { engaged: 0.60, lurkers: 0.15, mixed: 0.35 };
 const COMMAND_MIX = [['!атака', 0.5], ['!навык', 0.3], ['!особый', 0.2]];
@@ -39,17 +40,6 @@ function parseArgs(argv) {
 }
 
 // mulberry32 по контракту rng(min, max) → целое из [min, max].
-function makeRng(seed) {
-  let a = seed >>> 0;
-  return (min, max) => {
-    a = (a + 0x6d2b79f5) >>> 0;
-    let t = a;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return min + Math.floor((((t ^ (t >>> 14)) >>> 0) / 4294967296) * (max - min + 1));
-  };
-}
-
 // ---------- Инварианты ----------
 
 function checkInvariants(state, messages, config, violations, seed) {

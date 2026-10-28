@@ -219,7 +219,7 @@ export const CONFIG = {
     weaken: { pct: 0.25, turns: 2 },
     silence_class: { turns: 1 },
   },
-  // Цели баланса для simulate.js: доля побед по сценариям.
+  // Цели баланса для tools/simulate.js: доля побед по сценариям.
   // Активный чат должен чаще побеждать, молчаливый — чаще проигрывать, при любом размере отряда.
   SIM_TARGETS: {
     engaged: { min: 0.55, max: 0.70 },

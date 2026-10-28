@@ -12,7 +12,11 @@
     "start": "node bot.js",
     "console": "node bot.js --console",
     "auth": "node auth.js",
-    "loadtest": "node bot.js --loadtest 300"
+    "loadtest": "node bot.js --loadtest 300",
+    "play": "node tools/play.js --fast",
+    "sim": "node tools/simulate.js",
+    "demo": "node tools/demo.js && node tools/demo_cards.js",
+    "demo:points": "node tools/demo_points.js"
   },
   "dependencies": {
     "@twurple/api": "8.2.0",

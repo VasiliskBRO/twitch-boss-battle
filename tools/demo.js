@@ -1,8 +1,8 @@
-import { CONFIG } from './src/config.js';
-import { createPlayer, buildPlayer } from './src/players.js';
-import { getSkillWeights, getSkillDef, renderPersonalSkill, skillsForClass } from './src/personal_skills.js';
-import { getTraitDef, renderTraits } from './src/traits.js';
-import { renderPlayerStatus, renderRoster } from './src/renderer.js';
+import { CONFIG } from '../src/config.js';
+import { createPlayer, buildPlayer } from '../src/players.js';
+import { getSkillWeights, getSkillDef, renderPersonalSkill, skillsForClass } from '../src/personal_skills.js';
+import { getTraitDef, renderTraits } from '../src/traits.js';
+import { renderPlayerStatus, renderRoster } from '../src/renderer.js';
 
 // Фиксированные боссы (навыки из каталога части 1), чтобы вывод был воспроизводимым.
 const DRAGON = {

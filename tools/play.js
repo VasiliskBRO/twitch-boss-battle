@@ -2,19 +2,20 @@
 // Локальная игра в терминале: вы пишете команды как в чате Твича, вокруг сражаются боты.
 // Вы одновременно стример (!босс, !карта, !стоп) и игрок (!join, !атака, !навык, !особый, !я).
 //
-//   node play.js                      — 10 ботов, настоящие тайминги (лобби 75 с, ход 40 с, первый — 60 с)
-//   node play.js --bots 20 --fast     — ускоренно: лобби 20 с, ход 10 с, пауза между боями 5 с
-//   node play.js --private            — закрытая рука стримера (карты видны как [консоль])
+//   node tools/play.js                      — 10 ботов, настоящие тайминги (лобби 75 с, ход 40 с, первый — 60 с)
+//   node tools/play.js --bots 20 --fast     — ускоренно: лобби 20 с, ход 10 с, пауза между боями 5 с
+//   node tools/play.js --private            — закрытая рука стримера (карты видны как [консоль])
 //
 // Параметры: --bots N, --lobby S, --turn S, --pause S, --seed N, --name ИМЯ, --fast, --private.
 // Очки копятся между запусками в data/points.play.json (!очки, !топ).
 
 import fs from 'node:fs';
 import readline from 'node:readline';
-import { CONFIG } from './src/config.js';
-import { createBattleEngine } from './battle/engine.js';
-import { renderPlayerStatus, renderHpBar } from './src/renderer.js';
-import { createFileStore } from './points/index.js';
+import { CONFIG } from '../src/config.js';
+import { makeRng } from '../src/rng.js';
+import { createBattleEngine } from '../battle/engine.js';
+import { renderPlayerStatus, renderHpBar } from '../src/renderer.js';
+import { createFileStore } from '../points/index.js';
 
 const COMMAND_MIX = [['!атака', 0.5], ['!навык', 0.3], ['!особый', 0.2]];
 const BOT_NAMES = ['Ворон', 'Ёжик_TV', 'NightOwl', 'кот_учёный', 'Strelok', 'Магистр', 'ДобрыйДоктор', 'paladin_77',
@@ -28,20 +29,9 @@ function parseArgs(argv) {
     else if (key === '--private') a.private = true;
     else if (['--bots', '--lobby', '--turn', '--pause', '--seed'].includes(key)) a[key.slice(2)] = Number(argv[++i]);
     else if (key === '--name') a.name = argv[++i];
-    else throw new Error(`Неизвестный параметр ${key}. См. шапку play.js`);
+    else throw new Error(`Неизвестный параметр ${key}. См. шапку tools/play.js`);
   }
   return a;
-}
-
-function makeRng(seed) {
-  let s = seed >>> 0;
-  return (min, max) => {
-    s = (s + 0x6d2b79f5) >>> 0;
-    let t = s;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return min + Math.floor((((t ^ (t >>> 14)) >>> 0) / 4294967296) * (max - min + 1));
-  };
 }
 
 const args = parseArgs(process.argv.slice(2));
